@@ -1,0 +1,6 @@
+pymupdf
+selenium
+rich
+requests
+pycryptodome
+umsgpacktinydb
