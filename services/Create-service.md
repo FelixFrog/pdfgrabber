@@ -9,3 +9,5 @@
 .library(token) -> [bookid: {"title": title}]
 
 .checktoken(token) -> Boolean
+
+.refreshtoken(refreshtoken) -> new token
