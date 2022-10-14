@@ -18,7 +18,7 @@ Every downloader has different features that might also be implemented in the fu
 | oxfordlearnersbookshelf | yes | yes (small) | very big | ? | not yet/no | ? | yes | no |
 | dibook | yes | yes/(depends on vendor) | excellent | ? | not yet/no | ? | yes | no |
 
-Apps that I am aware of but I can't work with them beacuse I don't have books:
+Apps that I am aware of but I can't work with beacuse I don't have books:
  - Raffaello player
  - Appbook (might be a shitty html webview like booktab)
 
