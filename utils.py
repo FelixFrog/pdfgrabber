@@ -3,6 +3,7 @@ import fitz
 from tinydb import TinyDB, Query
 from hashlib import sha256
 from pathlib import Path
+import os
 
 db = TinyDB("db.json")
 usertable = db.table("users")
@@ -20,9 +21,14 @@ def login(servicename, username, password):
 	token = service.login(username, password)
 	return token
 
+def checkpath(path):
+	os.makedirs(path.parent, exist_ok=True)
+
+
 def downloadbook(servicename, token, bookid, data, progress):
 	service = getservice(servicename)
 	pdfpath = Path("files") / servicename / (f"{bookid}.pdf")
+	checkpath(pdfpath)
 	#pdfpath = "files/" + servicename + "/" + bookid + ".pdf"
 	
 	pdf = service.downloadbook(token, bookid, data, progress)
@@ -40,6 +46,7 @@ def cover(servicename, token, bookid, data):
 	from os.path import isfile
 	coverpath = Path("files") / servicename / (f"cover-{bookid}.pdf")
 	#coverpath = "files/" + servicename + "/cover-" + bookid + ".png"
+	checkpath(coverpath)
 	if not isfile(coverpath):
 		service = getservice(servicename)
 		open(coverpath, "wb").write(service.cover(token, bookid, data))
