@@ -3,4 +3,5 @@ selenium
 rich
 requests
 pycryptodome
-umsgpacktinydb
+umsgpack
+tinydb
