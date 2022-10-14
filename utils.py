@@ -44,7 +44,7 @@ def downloadbook(servicename, token, bookid, data, progress):
 
 def cover(servicename, token, bookid, data):
 	from os.path import isfile
-	coverpath = Path("files") / servicename / (f"cover-{bookid}.pdf")
+	coverpath = Path("files") / servicename / (f"cover-{bookid}.png")
 	#coverpath = "files/" + servicename + "/cover-" + bookid + ".png"
 	checkpath(coverpath)
 	if not isfile(coverpath):
