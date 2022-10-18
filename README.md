@@ -5,18 +5,18 @@ Every downloader has different features that might also be implemented in the fu
 
 | service | pdf download | table of contents | pdf size | max logins | page labels | login expire | cover | redered |
 | ------- | :----------: | :---------------: | :------: | :--------: | :---------: | :----------: | :---: | :-----: |
-| scuolabook | perfect | yes (very small) | excellent | very restrictive | not yet/depends on vendor | never | yes | no |
-| mylim | perfect | excellent | excellent | no | not yet/depends on vendor | ? | yes | no |
-| pearson/etext | perfect | (depends on vendor)/excellent | big | no | no/depends on vendor | very fast (30 min) | yes | sometimes |
-| pearson/readerplus | yes | good/very good | big | no | no/depends on vendor | very fast (30 min) | yes | no |
-| bsmart | yes | yes (very small) | very big (100+ mb) | no | not yet | ? | yes | no |
-| hubyoung | yes | yes | very big (100+ mb) | yes (disable because glitches) | not yet | ? | yes | no |
-| macmillan | yes | yes (very small) | good/excellent | no/1token4ever | no | never | yes (?) | no |
+| Scuolabook | perfect | yes (very small) | excellent | very restrictive | not yet/depends on vendor | never | yes | no |
+| MyLim | perfect | excellent | excellent | no | not yet/depends on vendor | ? | yes | no |
+| Pearson eText | perfect | (depends on vendor)/excellent | big | no | no/depends on vendor | very fast (30 min) | yes | sometimes |
+| Pearson Reader+ | yes | good/very good | big | no | no/depends on vendor | very fast (30 min) | yes | no |
+| bSmart | yes | yes (very small) | very big (100+ mb) | no | not yet | ? | yes | no |
+| Mondadori Hub Young | yes | yes | very big (100+ mb) | yes (disable because glitches) | not yet | ? | yes | no |
+| MEE2 | yes | yes (very small) | good/excellent | no/1token4ever | no | never | yes (?) | no |
 | easyeschool | yes | yes (very small) | excellent | no/1token4ever | no | never | yes | no |
-| zanichelli/booktab | yes | yes | good/average | yes | yes | ? | yes | no |
-| zanichelli/kitaboo | yes | yes | average/big | yes | yes | ? | yes | yes |
-| oxfordlearnersbookshelf | yes | yes (small) | very big | ? | not yet/no | ? | yes | no |
-| dibook | yes | yes/(depends on vendor) | excellent | ? | not yet/no | ? | yes | no |
+| Zanichelli Booktab | yes | yes | good/average | yes | yes | ? | yes | no |
+| Zanichelli Kitaboo | yes | yes | average/big | yes | yes | ? | yes | yes |
+| Oxford Learner’s Bookshelf | yes | yes (small) | very big | ? | not yet/no | ? | yes | no |
+| Laterza diBooK | yes | yes/(depends on vendor) | excellent | ? | not yet/no | ? | yes | no |
 
 Apps that I am aware of but I can't work with beacuse I don't have books:
  - Raffaello player
