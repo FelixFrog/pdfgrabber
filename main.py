@@ -1,4 +1,5 @@
 import utils
+import sys
 from rich.console import Console
 from rich.table import Table
 from rich.rule import Rule
@@ -145,6 +146,9 @@ def books():
 	console.print(table)
 
 def main():
+	if not (sys.version_info.major >= 3 and sys.version_info.minor >= 10):
+		console.print("Python version 3.10 or greater is required!", style="bold red")
+		exit()
 	console.print(Rule("pdfgrabber 1.0"))
 	while True:
 		action = Prompt.ask("[magenta]What do you want to do?[/magenta] (register new user, download a book, logout, manage tokens, view all books, quit)", choices=["r", "d", "t", "l", "b", "q"], default="d")
@@ -160,7 +164,6 @@ def main():
 			case "b":
 				books()
 			case "q":
-				console.clear()
 				exit()
 			case _:
 				console.print("Invalid action!", style="bold red")
