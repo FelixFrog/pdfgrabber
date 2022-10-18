@@ -31,7 +31,7 @@ Apps that I am aware of but I can't work with beacuse I don't have books:
 
 # Installation
 You need python 3.6+. To install all the requirements run ```python3 -m pip install -r requirements.txt```. Also the script has been tested only on mac os, contact me if you have tried it on linux/windows or you have problems.
-## kitaboo/readerplus books
+## Kitaboo/Reader+ books
 For kitaboo books the script uses selenium and a chrome webdriver instance to rendere the html pages. It might also not work at all on windows, I haven't had the opportunity to try it. To configure it, go to ```lib.py``` and change the two paths at the beginning of the file, one for the chromedriver executable path, the other with the chrome binary path.
 # How to use it
 Just run ```python3 main.py```. You first need to create an account by selecting *r* in the first menu. After you created an account, select *d* and the menus will guide you. The output file will be ```files/<service>/<id>.pdf```
