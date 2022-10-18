@@ -1,4 +1,5 @@
 from Crypto.Random import get_random_bytes
+from Crypto.Util.Padding import unpad
 from Crypto.Cipher import AES
 from Crypto.Hash import HMAC, SHA256
 from base64 import b64encode, b64decode
@@ -100,7 +101,15 @@ def decryptfile(data, bid):
 	h.update(bid.encode())
 
 	cipher = AES.new(h.digest(), AES.MODE_ECB)
-	return cipher.decrypt(data[len(header):]).rstrip(b"\x0b")
+	return unpad(cipher.decrypt(data[len(header):]).rstrip(b"\x0b"), AES.block_size)
+
+def parsebook(book):
+	if "external" not in book:
+		return
+	ids = {i["typeId"]: i["id"] for i in book["external"]}
+	if "bid" not in ids:
+		return
+	return {ids["bid"]: {"title": book["productName"], "isbn": ids["isbn"]}}
 
 def library(token):
 	identity = getidentity(token)
@@ -109,15 +118,16 @@ def library(token):
 
 	books = dict()
 	for i in library["data"]["licenses"]:
-		# choose a better book selection method, here we just assume it's the first
-		book = i["oupLicense"]["productIds"][0]
-		if "external" not in book:
-			continue
-		ids = {j["typeId"]: j["id"] for j in book["external"]}
-		if "bid" not in ids:
-			continue
-		books[ids["bid"]] = {"title": book["productName"], "isbn": ids["isbn"]}
-
+		for j in i["oupLicense"]["productIds"]:
+			if "linkedProductIds" not in j:
+				book = parsebook(j)
+				if book:
+					books = books | book
+			else:
+				for k in j["linkedProductIds"]:
+					book = parsebook(k)
+					if book:
+						books = books | book
 	return books
 
 def cover(token, bookid, data):

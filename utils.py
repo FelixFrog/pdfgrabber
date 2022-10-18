@@ -37,8 +37,9 @@ def downloadbook(servicename, token, bookid, data, progress):
 	metadata = {'producer': "PyMuPDF " + fitz.version[0], 'format': 'PDF 1.7', 'encryption': None, 'author': 'none', 'modDate': pdfnow, 'keywords': 'none', 'title': data["title"], 'creationDate': pdfnow, 'creator': "pdfgrabber1.0", 'subject': 'none'}
 	pdf.set_metadata(metadata)
 	progress(99, "Saving pdf")
-	pdf.save(pdfpath, garbage=3, clean=True, linear=True)
-	#pdf.save(pdfpath)
+	# This saves a bit of spaces but sometimes causes the disappearence of the first page. Dunno Y
+	#pdf.save(pdfpath, garbage=3, clean=True, linear=True)
+	pdf.save(pdfpath)
 	booktable.upsert({"service": servicename, "bookid": bookid, "title": data["title"], "pages": len(pdf), "path": str(pdfpath)}, (Query().service == servicename) and (Query().bookid == bookid))
 	return pdfpath
 
