@@ -30,7 +30,7 @@ Apps that I am aware of but I can't work with beacuse I don't have books:
  - Use pathlib for better windows compatibility
 
 # Installation
-You need python 3.6+. To install all the requirements run ```python3 -m pip install -r requirements.txt```. Also the script has been tested only on mac os, contact me if you have tried it on linux/windows or you have problems.
+You need python 3.10+. To install all the requirements run ```python3 -m pip install -r requirements.txt```. Also the script has been tested only on mac os, open an issue/pull request if you have tried it on linux/windows or you have problems.
 ## Kitaboo/Reader+ books
 For kitaboo books the script uses selenium and a chrome webdriver instance to rendere the html pages. It might also not work at all on windows, I haven't had the opportunity to try it. To configure it, go to ```lib.py``` and change the two paths at the beginning of the file, one for the chromedriver executable path, the other with the chrome binary path.
 # How to use it
