@@ -6,6 +6,7 @@ from rich.table import Table
 from rich.rule import Rule
 from rich.prompt import Prompt
 from rich.prompt import Confirm
+from rich.progress import Progress
 
 console = Console()
 userid = ""
@@ -104,21 +105,31 @@ def downloadbook():
 	console.clear()
 	console.print(table)
 
-	bookid = id2bookid[int(Prompt.ask("Select a book", choices=[str(i) for i in range(len(id2bookid))]))]
+	choices = Prompt.ask("Select a book or a comma-separated list of books").split(",")
+	
+	def checknumber(n):
+		if n.isdigit():
+			return int(n) < len(id2bookid) - 1
+		else:
+			return False
 
-	from rich.progress import Progress
-	with Progress() as progress:
-		maintask = progress.add_task("Starting...", total=100)
-		def progressfun(update, status=""):
-			if status:
-				progress.update(maintask, description=status, completed=update)
-			else:
-				progress.update(maintask, completed=update)
+	while not all(map(checknumber, choices)):
+		choices = Prompt.ask("Invalid choice. Try again").split(",")
 
-		pdfpath = utils.downloadbook(service, token, bookid, books[bookid], progressfun)
-		progress.update(maintask, description="Done", completed=100)
+	for i in choices:
+		bookid = id2bookid[int(i)]
+		with Progress() as progress:
+			maintask = progress.add_task("Starting...", total=100)
+			def progressfun(update, status=""):
+				if status:
+					progress.update(maintask, description=status, completed=update)
+				else:
+					progress.update(maintask, completed=update)
 
-	console.print(f"[bold green]Done![/bold green] Your book is in {pdfpath}")
+			pdfpath = utils.downloadbook(service, token, bookid, books[bookid], progressfun)
+			progress.update(maintask, description="Done", completed=100)
+
+		console.print(f"[bold green]Done![/bold green] Your book is in {pdfpath}")
 
 def register():
 	username = Prompt.ask("Username")
@@ -165,6 +176,7 @@ def main():
 			case "b":
 				books()
 			case "q":
+				console.print("Bye!", style="bold green")
 				exit()
 			case _:
 				console.print("Invalid action!", style="bold red")
