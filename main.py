@@ -1,5 +1,6 @@
 import utils
 import sys
+import os
 from rich.console import Console
 from rich.table import Table
 from rich.rule import Rule
@@ -170,5 +171,11 @@ def main():
 		console.print(Rule())
 
 if __name__ == '__main__':
-	main()
-
+	try:
+		main()
+	except KeyboardInterrupt:
+		console.print("\nBye!", style="bold green")
+		try:
+			sys.exit(0)
+		except SystemExit:
+			os._exit(0)
