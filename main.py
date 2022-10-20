@@ -109,7 +109,7 @@ def downloadbook():
 	
 	def checknumber(n):
 		if n.isdigit():
-			return int(n) < len(id2bookid) - 1
+			return int(n) < len(id2bookid)
 		else:
 			return False
 
