@@ -9,7 +9,7 @@ Every downloader has different features that might also be implemented in the fu
 | MyLim | perfect | excellent | excellent | no | not yet/depends on vendor | ? | yes | no |
 | Pearson eText | perfect | (depends on vendor)/excellent | big | no | no/depends on vendor | very fast (30 min) | yes | sometimes |
 | Pearson Reader+ | yes | good/very good | big | no | no/depends on vendor | very fast (30 min) | yes | no |
-| bSmart | yes | yes (very small) | very big (100+ mb) | no | not yet | ? | yes | no |
+| bSmart | yes | yes (very small) | very big (100+ mb) | no | yes | ? | yes | no |
 | Mondadori Hub Young | yes | yes | very big (100+ mb) | yes (disable because glitches) | not yet | ? | yes | no |
 | MEE2 | yes | yes (very small) | good/excellent | no/1token4ever | no | never | yes (?) | no |
 | easyeschool | yes | yes (very small) | excellent | no/1token4ever | no | never | yes | no |

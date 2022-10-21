@@ -5,6 +5,7 @@ from io import BytesIO
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
 import fitz
+import lib
 
 service = "bsm"
 
@@ -18,9 +19,12 @@ def getlibrary(token):
 	r = requests.get("https://www.bsmart.it/api/v5/books", headers={"AUTH_TOKEN": token}, params={"per_page": 1000000, "page_thumb_size": "medium"})
 	return r.json()
 
+def getpreactivations(token):
+	r = requests.get("https://www.bsmart.it/api/v5/books/preactivations", headers={"AUTH_TOKEN": token})
+	return r.json()
+
 def getbookinfo(token, bookid, revision, operation):
 	r = requests.get("https://www.bsmart.it/api/v5/books/" + str(bookid) + "/" + str(revision) + "/" + operation, headers={"AUTH_TOKEN": token}, params={"per_page": 1000000})
-	open(f"{bookid}-{operation}.json", "wb").write(r.content)
 	return r.json()
 
 def downloadpack(url, progress, total, done):
@@ -41,9 +45,9 @@ def decryptfile(file):
 
 	iv = file.read(16)
 	obj = AES.new(key, AES.MODE_CBC, iv)
-	dec = obj.decrypt(file.read(header["start"] - 256 - 16))
+	dec = obj.decrypt(file.read(header[b"start"] - 256 - 16))
 
-	return unpad(dec, AES.block_size) + file.read(), header["md5"]
+	return unpad(dec, AES.block_size) + file.read(), header[b"md5"].decode()
 
 def login(username, password):
 	logindata = getlogindata(username, password)
@@ -61,15 +65,25 @@ def library(token):
 	for i in getlibrary(token):
 		books[str(i["id"])] = {"title": i["title"], "revision": i["current_edition"]["revision"], "cover": i["cover"]}
 
+	for i in getpreactivations(token):
+		for book in i["books"]:
+			books[str(book["id"])] = {"title": book["title"], "revision": book["current_edition"]["revision"], "cover": book["cover"]}
+
 	return books
 
 def downloadbook(token, bookid, data, progress):
 	revision = data["revision"]
 	progress(0, "Getting resources")
 	resources = getbookinfo(token, bookid, revision, "resources")
-	resmd5 = {next(j["md5"] for j in i["assets"] if j["use"] == "page_pdf"): i["id"] for i in resources if i["resource_type_id"] == 14}
+	resmd5 = {}
+	for i in resources:
+		if i["resource_type_id"] != 14:
+			continue
+		if pdf := next((j for j in i["assets"] if j["use"] == "page_pdf"), False):
+			resmd5[pdf["md5"]] = i["id"], i["title"]
 
-	pagespdf = dict()
+
+	pagespdf, labelsmap = {}, {}
 	progress(5, "Fetching asset packs")
 	assetpacks = getbookinfo(token, bookid, revision, "asset_packs")
 
@@ -81,10 +95,12 @@ def downloadbook(token, bookid, data, progress):
 		file = pagespack.extractfile(member)
 		if file:
 			output, md5 = decryptfile(file)
-			pagespdf[resmd5[md5]] = output
+			pid, label = resmd5[md5]
+			pagespdf[pid] = output
+			labelsmap[pid] = label
 
 	pdf = fitz.Document()
-	toc = []
+	toc, labels = [], []
 
 	progress(95, "Obtaining toc")
 	index = getbookinfo(token, bookid, revision, "index")
@@ -93,9 +109,11 @@ def downloadbook(token, bookid, data, progress):
 	for i, (pageid, pagepdfraw) in enumerate(sorted(pagespdf.items())):
 		pagepdf = fitz.Document(stream=pagepdfraw, filetype="pdf")
 		pdf.insert_pdf(pagepdf)
+		labels.append(labelsmap[pageid])
 		if pageid in bookmarks:
 			toc.append([1, bookmarks[pageid], i + 1])
 
-	progress(98, "Applying toc")
+	progress(98, "Applying toc/labels")
+	pdf.set_page_labels(lib.generatelabelsrule(labels))
 	pdf.set_toc(toc)
 	return pdf
