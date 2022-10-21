@@ -10,7 +10,7 @@ Every downloader has different features that might also be implemented in the fu
 | Pearson eText | perfect | (depends on vendor)/excellent | big | no | no/depends on vendor | very fast (30 min) | yes | sometimes |
 | Pearson Reader+ | yes | good/very good | big | no | no/depends on vendor | very fast (30 min) | yes | no |
 | bSmart | yes | yes (very small) | very big (100+ mb) | no | yes | ? | yes | no |
-| Mondadori Hub Young | yes | yes | very big (100+ mb) | yes (disable because glitches) | not yet | ? | yes | no |
+| Mondadori Hub Young | yes | yes | very big (100+ mb) | no | yes (disable because glitches) | ? | yes | no |
 | MEE2 | yes | yes (very small) | good/excellent | no/1token4ever | no | never | yes (?) | no |
 | easyeschool | yes | yes (very small) | excellent | no/1token4ever | no | never | yes | no |
 | Zanichelli Booktab | yes | yes | good/average | yes | yes | ? | yes | no |
