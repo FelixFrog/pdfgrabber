@@ -101,7 +101,12 @@ def decryptfile(data, bid):
 	h.update(bid.encode())
 
 	cipher = AES.new(h.digest(), AES.MODE_ECB)
-	return unpad(cipher.decrypt(data[len(header):]).rstrip(b"\x0b"), AES.block_size)
+	decrypted = cipher.decrypt(data[len(header):]).rstrip(b"\x0b")
+	padlength = decrypted[-1]
+	if bytes([padlength] * padlength) == decrypted[-padlength:]:
+		return decrypted[:-padlength]
+	else:
+		return decrypted
 
 def parsebook(book):
 	if "external" not in book:
