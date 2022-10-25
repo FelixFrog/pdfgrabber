@@ -296,7 +296,7 @@ def downloadrplusepub(url, password, progress):
 		with webdriver.Chrome(options=chromeoptions, executable_path=lib.chromedriverlocation) as wd:
 			for j, pagepath in enumerate(pages):
 				fullpath = navpath / pagepath
-				match = re.search('content="width=([0-9]+), height=([0-9]+)"', open(fullpath).read())
+				match = re.search('content.+?width\s{,1}=\s{,1}([0-9]+).+?height\s{,1}=\s{,1}([0-9]+)', open(fullpath).read())
 
 				wd.get(fullpath.resolve().as_uri())
 				advancement = (j + 1) / len(pages) * 62 + 36
