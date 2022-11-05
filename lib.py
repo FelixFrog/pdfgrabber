@@ -82,9 +82,8 @@ def buildalphabetical_fake(n):
 		i += 1
 
 	for j in reversed(range(i)):
-		f, g = divmod(a, 26 ** j)
+		f, a = divmod(a, 26 ** j)
 		s += ls[f]
-		a = g
 	return s
 
 def destroyroman(s):

@@ -10,6 +10,7 @@ from io import BytesIO
 import xml.etree.ElementTree as et
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+import json
 import lib
 import re
 import gzip
@@ -17,7 +18,8 @@ import fitz
 
 service = "znc"
 
-xorprivatekey = bytes([84, 148, 207, 227, 48, 21, 176, 185, 107, 164, 213, 215, 76, 101, 125, 243, 84, 231, 239, 48, 158, 195, 67, 7, 15, 229, 100, 161, 249, 17, 48, 247, 11, 140, 176, 126, 195, 67, 127, 206, 61, 54, 31, 51, 236, 255, 134, 145, 14, 176, 210, 107, 3, 106, 168, 221, 168, 92, 127, 85, 223, 163, 180, 188, 205, 130, 104, 161, 252, 118, 225, 159, 82, 28, 69, 249, 214, 55, 204, 1, 154, 209, 67, 154, 41, 129, 25, 92, 67, 48, 51, 70, 106, 69, 110, 201, 241, 43, 191, 129, 133, 124, 183, 6, 80, 111, 36, 96, 131, 57, 116, 46, 150, 21, 135, 8, 146, 184, 105, 236, 61, 140, 186, 214, 164, 134, 124, 173, 79, 138, 2, 167, 121, 119, 55, 155, 49, 138, 255, 67, 156, 183, 228, 139, 215, 74, 211, 8, 241, 231, 223, 57, 104, 30, 104, 73, 118, 117, 69, 178, 79, 40, 240, 39, 81, 239, 201, 160, 131, 119, 75, 74, 113, 47, 104, 137, 73, 166, 147, 223, 134, 47, 170, 142, 112, 59, 45, 72, 128, 198, 20, 113, 135, 149, 232, 147, 51, 136, 82, 125, 56, 207, 40, 184, 131, 36, 118, 112, 240, 145, 94, 154, 37, 210, 171, 0, 127, 187, 226, 209, 188, 209, 82, 243, 55, 78, 90, 42, 142, 55, 203, 107, 121, 74, 8, 236, 203, 90, 44, 107, 98, 184, 77, 46, 107, 190, 132, 87, 195, 138, 78, 61, 135, 89, 11, 86])
+#xorprivatekey = bytes([84, 148, 207, 227, 48, 21, 176, 185, 107, 164, 213, 215, 76, 101, 125, 243, 84, 231, 239, 48, 158, 195, 67, 7, 15, 229, 100, 161, 249, 17, 48, 247, 11, 140, 176, 126, 195, 67, 127, 206, 61, 54, 31, 51, 236, 255, 134, 145, 14, 176, 210, 107, 3, 106, 168, 221, 168, 92, 127, 85, 223, 163, 180, 188, 205, 130, 104, 161, 252, 118, 225, 159, 82, 28, 69, 249, 214, 55, 204, 1, 154, 209, 67, 154, 41, 129, 25, 92, 67, 48, 51, 70, 106, 69, 110, 201, 241, 43, 191, 129, 133, 124, 183, 6, 80, 111, 36, 96, 131, 57, 116, 46, 150, 21, 135, 8, 146, 184, 105, 236, 61, 140, 186, 214, 164, 134, 124, 173, 79, 138, 2, 167, 121, 119, 55, 155, 49, 138, 255, 67, 156, 183, 228, 139, 215, 74, 211, 8, 241, 231, 223, 57, 104, 30, 104, 73, 118, 117, 69, 178, 79, 40, 240, 39, 81, 239, 201, 160, 131, 119, 75, 74, 113, 47, 104, 137, 73, 166, 147, 223, 134, 47, 170, 142, 112, 59, 45, 72, 128, 198, 20, 113, 135, 149, 232, 147, 51, 136, 82, 125, 56, 207, 40, 184, 131, 36, 118, 112, 240, 145, 94, 154, 37, 210, 171, 0, 127, 187, 226, 209, 188, 209, 82, 243, 55, 78, 90, 42, 142, 55, 203, 107, 121, 74, 8, 236, 203, 90, 44, 107, 98, 184, 77, 46, 107, 190, 132, 87, 195, 138, 78, 61, 135, 89, 11, 86])
+xorprivatekey = "VJTP4zAVsLlrpNXXTGV981Tn7zCew0MHD+VkofkRMPcLjLB+w0N/zj02HzPs/4aRDrDSawNqqN2oXH9V36O0vM2CaKH8duGfUhxF+dY3zAGa0UOaKYEZXEMwM0ZqRW7J8Su/gYV8twZQbyRggzl0LpYVhwiSuGnsPYy61qSGfK1PigKneXc3mzGK/0Oct+SL10rTCPHn3zloHmhJdnVFsk8o8CdR78mgg3dLSnEvaIlJppPfhi+qjnA7LUiAxhRxh5XokzOIUn04zyi4gyR2cPCRXpol0qsAf7vi0bzRUvM3TloqjjfLa3lKCOzLWixrYrhNLmu+hFfDik49h1kLVg=="
 
 def getlogindata(username, password):
 	logindata = {"username": username, "password": password, "device_id": get_random_bytes(8).hex(), "device_name": "iPhone Grosso (tm)", "dry_run": False}
@@ -37,17 +39,16 @@ def getmanifest(token, isbn):
 	return r.json()
 
 def downloadresource(token, isbn, path, progress=False, total=0, done=0):
-	showprogress = bool(progress)
-	r = requests.get("https://booktab-main-api.zanichelli.it/api/v5/books/" + isbn + "/resource/" + path, headers={"Authorization": "Bearer " + token}, stream=showprogress)
-	if showprogress:
+	r = requests.get("https://booktab-main-api.zanichelli.it/api/v5/books/" + isbn + "/resource/" + path, headers={"Authorization": "Bearer " + token}, stream=progress)
+	if progress:
 		length = int(r.headers.get("content-length", 1))
 		file = b""
 		for data in r.iter_content(chunk_size=102400):
 			file += data
 			progress(round(done + len(file) / length * total))
-		return file
+		return file if r.status_code == 200 else False
 	else:
-		return r.content
+		return r.content if r.status_code == 200 else False
 
 def cover(token, bookid, data):
 	r = requests.get("https://booktab-main-api.zanichelli.it/" + data["cover"].removesuffix(".png") + "@2x.png")
@@ -78,7 +79,7 @@ def decryptheader(infile, key):
 	return decrypt(header, key) + file.read()
 
 def xordecrypt(file):
-	dec = bytes([a ^ b for (a, b) in zip(file, cycle(xorprivatekey))])
+	dec = bytes([a ^ b for (a, b) in zip(file, cycle(b64decode(xorprivatekey)))])
 	zipfile = ZipFile(BytesIO(dec))
 	return zipfile.read(zipfile.namelist()[0])
 
@@ -96,44 +97,45 @@ def getoutline(tree, appended, offset, level):
 		subtoc.extend(getoutline(i, appended, offset, level + 1))
 	return subtoc
 
-def downloadbooktab(token, isbn, offset, pdf, toc, labels, progress):
+def downloadbooktab3(token, isbn, pdf, toc, labels, progress, encryption):
 	newtoc = toc.copy()
 	newlabels = labels.copy()
 
-	progress(5, "Downloading volume.xml")
-	volumeinfo = downloadresource(token, isbn, "volume.xml")
-	volumeinfo = xordecrypt(volumeinfo)
-	volumeinfo = et.fromstring(volumeinfo.decode())
+	progress(5, "Downloading info")
+	volumeinfo, tocelems = getbookfiles(token, isbn, encryption)
 
-	progress(8, "Downloading spine.xml")
-	spine = downloadresource(token, isbn, "spine.xml")
-	spine = et.fromstring(spine.decode())
-	tocelems = {i.get("btbid"): i for i in spine.findall("unit")}
-
-	pcount = offset + 1
+	#units = sorted([i for i in volumeinfo.find("volume").find("units").findall("unit") if i.find("resources")], key=lambda unit: unit.find("unitorder").text)
 	units = [i for i in volumeinfo.find("volume").find("units").findall("unit") if i.find("resources")]
-	unitwidth = (95 - 11) / len(units)
+
+	unitwidth = (95 - 5) / len(units)
 	for i, unit in enumerate(units):
-		btbid = unit.get("btbid")
+		btbid, unitid = unit.get("btbid"), unit.get("id")
 		basepath = next(j for j in unit.find("resources").findall("resource") if j.get("type") == "base")
 		basepath = next(j.text for j in basepath.findall("download") if j.get("device") == "desktop")
-		progress(11 + i * unitwidth, f"Downloading unit {i + 1}/{len(units)}")
-		unitbase = ZipFile(BytesIO(downloadresource(token, isbn, btbid + "/" + basepath, progress, unitwidth, 11 + i * unitwidth)))
-		config = xordecrypt(unitbase.read(btbid + "/config.xml"))
+
+		progress(5 + i * unitwidth, f"Downloading unit {i + 1}/{len(units)}")
+		unitbase = ZipFile(BytesIO(downloadresource(token, isbn, btbid + "/" + basepath, progress, unitwidth, 5 + i * unitwidth)))
+		config = unitbase.read(btbid + "/config.xml")
+		if encryption:
+			config = xordecrypt(config)
 		config = et.fromstring(config.decode())
+
+		pageindex = [j.get("btbid") for j in config.find("links").findall("page")]
+		if tocelems:
+			spineitem = tocelems[unitid]
+			newtoc.append([1, spineitem.find("title").text, len(pdf) + pageindex.index(spineitem.get("page")) + 1])
+			for j in spineitem.findall("h1"):
+				newtoc.append([2, j.find("title").text, len(pdf) + pageindex.index(j.get("page")) + 1])
+		else:
+			newtoc.append([1, unit.find("displaytitle").text, len(pdf) + 1])
 
 		pdfpath = config.find("content").text + ".pdf"
 		fakepath = next(j.text for j in config.find("filesMap").findall("entry") if j.get("key") == pdfpath)
-		unitpdf = xordecrypt(unitbase.read(btbid + "/" + fakepath))
+		unitpdf = unitbase.read(btbid + "/" + fakepath)
+		if encryption:
+			unitpdf = xordecrypt(unitpdf)
 		unitpdf = fitz.Document(stream=unitpdf, filetype="pdf")
 		pdf.insert_pdf(unitpdf)
-
-		pageindex = [j.get("btbid") for j in config.find("links").findall("page")]
-		spineitem = tocelems[btbid]
-		newtoc.append([1, spineitem.find("title").text, pcount + pageindex.index(spineitem.get("page"))])
-		for j in spineitem.findall("h1"):
-			newtoc.append([2, j.find("title").text, pcount + pageindex.index(j.get("page"))])
-		pcount += len(unitpdf)
 
 		start = int(config.find("pages").text.split("-")[0])
 		for j, page in enumerate(config.find("links").findall("page")):
@@ -141,9 +143,66 @@ def downloadbooktab(token, isbn, offset, pdf, toc, labels, progress):
 				newlabels.append(label)
 			else:
 				newlabels.append(str(j + start))
+
 	return pdf, newtoc, newlabels
 
-def downloadkitaboo(token, isbn, offset, pdf, toc, labels, progress):
+def downloadbooktab_legacy(token, isbn, pdf, toc, progress, version):
+	newtoc = []
+
+	progress(5, "Downloading info")
+	volumeinfo, spine = getbookfiles(token, isbn)
+
+	units = [item for volumes in volumeinfo.find("volumes").findall("volume") for item in volumes.find("units").findall("unit")]
+
+	prevlen = len(pdf) + 1
+
+	unitwidth = 90 / len(units)
+	for i, unit in enumerate(units):
+		if not (unitid := unit.get("id")):
+			unitid = unit.get("href").removesuffix(".zip")
+		progress(5 + unitwidth * i, f"Downloading unit {i + 1}/{len(units)}")
+		unitzip = ZipFile(BytesIO(downloadresource(token, isbn, unit.get("href"), progress, unitwidth, 5 + unitwidth * i)))
+		config = et.fromstring(unitzip.read(f"{unitid}/config.xml").decode())
+
+		pdfpath = unitid + "/" + config.find("content").text + ".pdf"
+		prevlen = len(pdf) + 1
+		pdf.insert_pdf(fitz.Document(stream=unitzip.read(pdfpath), filetype="pdf"))
+
+		newtoc.append([1, unit.find("unittitle").text, prevlen])
+
+		# 1.0 and 2.0 books are not supposed have a spine, but I'm not sure
+		if spine:
+			print("Wow! You found a legacy book with a spine! Amazing! Contact the developer immediatly!")
+		'''
+		if not spine:
+			newtoc.append([1, unit.find("unittitle").text, prevlen])
+		elif spine and version == "2.0":
+			partialspine = spine[unit.get("id")]
+			refs = {i.get("page"): (int(i.tag.removeprefix("h")), i.find("title").text) for i in partialspine if i.tag in ["h1", "h2", "h3"]}
+			refs[partialspine.get("page")] = partialspine.find("title").text
+			for j, page in enumerate(config.find("links").findall("page")):
+				if page.get("btbid") in refs:
+					depth, title = refs[page.get("btbid")]
+					newtoc.append([depth, title, prevlen + j])
+		'''
+
+	return pdf, newtoc
+
+def getbookfiles(token, isbn, encryption=False):
+	tocelems = []
+
+	volumeinfo = downloadresource(token, isbn, "volume.xml")
+	if encryption:
+		volumeinfo = xordecrypt(volumeinfo)
+	volumeinfo = et.fromstring(volumeinfo.decode())
+
+	spine = downloadresource(token, isbn, "spine.xml")
+	if spine:
+		spine = et.fromstring(spine.decode())
+		tocelems = {i.get("id"): i for i in spine.findall("unit")}
+	return volumeinfo, tocelems
+
+def downloadkitaboo(token, isbn, pdf, toc, labels, progress):
 	newtoc = toc.copy()
 	newlabels = labels.copy()
 
@@ -162,6 +221,8 @@ def downloadkitaboo(token, isbn, offset, pdf, toc, labels, progress):
 
 	with TemporaryDirectory(prefix="kitaboo.", ignore_cleanup_errors=True) as tmpdir:
 		basefiles = ["css", "images", "js", "fonts"]
+		if True:
+			basefiles.remove("images")
 		baseresource.extractall(tmpdir, [file for file in baseresource.namelist() if any(file.startswith("OPS/" + x) for x in basefiles)])
 
 		with webdriver.Chrome(options=chromeoptions, executable_path=lib.chromedriverlocation) as wd:
@@ -196,7 +257,7 @@ def downloadkitaboo(token, isbn, offset, pdf, toc, labels, progress):
 					appended.append(pagefile)
 
 					fullpath = tmpdir + "/OPS/" + pagefile
-					match = re.search('content="width=([0-9]+), height=([0-9]+)"', open(fullpath).read())
+					match = re.search('content.+?width\s{,1}=\s{,1}([0-9]+).+?height\s{,1}=\s{,1}([0-9]+)', open(fullpath).read())
 
 					wd.get('file://' + fullpath)
 					progress(round(unitstart + unitwidth / 4 + pagewidth * j), f"Rendering page {j + 1}/{len(pages)}")
@@ -207,7 +268,7 @@ def downloadkitaboo(token, isbn, offset, pdf, toc, labels, progress):
 	progress(93, "Applying toc")
 	tocobj = et.fromstring(baseresource.read("OPS/toc.xml").decode())
 	for i in tocobj.find("toc").findall("node"):
-		newtoc.extend(getoutline(i, appended, offset + 1, 1))
+		newtoc.extend(getoutline(i, appended, 1, 1))
 
 	return pdf, newtoc, newlabels
 
@@ -226,8 +287,10 @@ def library(token):
 	for i in library["books"]:
 		isbn = i["isbn"]
 		bookmetadata = next((j for j in metadata["books"] if j["isbn"] == isbn), False)
-		if bookmetadata and "-" not in isbn and isbn != "9100000000007":
-			books[str(isbn)] = {"title": bookmetadata["title"], "format": i["format"], "cover": bookmetadata["cover"], "relatedisbns": i["relatedIsbns"]}
+		#if bookmetadata and "-" not in isbn and isbn != "9100000000007":
+		books[str(isbn)] = {"title": i["version"] + " - " + i["format"] + " - " + bookmetadata["title"], "format": i["format"], "cover": bookmetadata["cover"], "relatedisbns": i["relatedIsbns"], "version": i["version"]}
+		if "encryptionType" in i:
+			books[str(isbn)]["encryption"] = i["encryptionType"]
 
 	return books
 
@@ -236,26 +299,26 @@ def downloadbook(token, bookid, data, progress):
 	toc = []
 	labels = []
 	relatedisbns = data["relatedisbns"]
-	offset = 0
 
+	# with the and False we disable the search for the index since it leads to a duplicate index most of the times
 	progress(0, "Searching for book index")
-	if data["format"] != "booktab":
+	if data["format"] != "booktab" and False:
 		for isbn in relatedisbns + [bookid]:
 			indice = getadditional(isbn, "_02_IND.pdf")
 			if indice:
 				indicepdf = fitz.Document(stream=indice, filetype="pdf")
 				pdf.insert_pdf(indicepdf)
-				offset = len(pdf)
 				toc.append([1, "Indice dei contenuti", 1])
 				labels.extend(["Indice"] * len(pdf))
 				break
 
 	if data["format"] == "booktab":
-		pdf, toc, labels = downloadbooktab(token, bookid, offset, pdf, toc, labels, progress)
+		if data["version"] in ["1.0", "2.0"]:
+			pdf, toc = downloadbooktab_legacy(token, bookid, pdf, toc, progress, data["version"])
+		else:
+			pdf, toc, labels = downloadbooktab3(token, bookid, pdf, toc, labels, progress, data["encryption"])
 	else:
-		pdf, toc, labels = downloadkitaboo(token, bookid, offset, pdf, toc, labels, progress)
-
-	offset = len(pdf) + 1
+		pdf, toc, labels = downloadkitaboo(token, bookid, pdf, toc, labels, progress)
 
 	progress(95, "Searching for backcover")
 	for isbn in relatedisbns + [bookid]:
@@ -263,11 +326,12 @@ def downloadbook(token, bookid, data, progress):
 		if quarta:
 			quartapdf = fitz.Document(stream=quarta,filetype="pdf")
 			pdf.insert_pdf(quartapdf)
-			toc.append([1, "Quarta di copertina", offset])
+			toc.append([1, "Quarta di copertina", len(pdf)])
 			labels.extend(["Copertina"] * len(quartapdf))
 			break
 
 	progress(98, "Applying toc/labels")
-	pdf.set_page_labels(lib.generatelabelsrule(labels))
+	if labels:
+		pdf.set_page_labels(lib.generatelabelsrule(labels))
 	pdf.set_toc(toc)
 	return pdf
