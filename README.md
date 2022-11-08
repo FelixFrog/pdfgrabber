@@ -31,6 +31,7 @@ Apps that I am aware of but I can't work with beacuse I don't have books:
 
 # Installation
 You need python 3.10+. To install all the requirements run ```python3 -m pip install -r requirements.txt```. Also the script has been tested only on mac os, open an issue/pull request if you have tried it on linux/windows or you have problems.
+# Quirks
 ## Kitaboo/Reader+ books
 For kitaboo books the script uses selenium and a chrome webdriver instance to rendere the html pages. It might also not work at all on windows, I haven't had the opportunity to try it. To configure it, go to ```lib.py``` and change the two paths at the beginning of the file, one for the chromedriver executable path, the other with the chrome binary path (the version of the two should match). Beware that I had many problems with the latest versions of chrome and chromedriver. I tested v98 and I am sure it works for both, while I had a bad experience with versions >102
 ## Scuolabook
