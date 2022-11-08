@@ -288,7 +288,7 @@ def library(token):
 		isbn = i["isbn"]
 		bookmetadata = next((j for j in metadata["books"] if j["isbn"] == isbn), False)
 		#if bookmetadata and "-" not in isbn and isbn != "9100000000007":
-		books[str(isbn)] = {"title": i["version"] + " - " + i["format"] + " - " + bookmetadata["title"], "format": i["format"], "cover": bookmetadata["cover"], "relatedisbns": i["relatedIsbns"], "version": i["version"]}
+		books[str(isbn)] = {"title": bookmetadata["title"], "format": i["format"], "cover": bookmetadata["cover"], "relatedisbns": i["relatedIsbns"], "version": i["version"]}
 		if "encryptionType" in i:
 			books[str(isbn)]["encryption"] = i["encryptionType"]
 

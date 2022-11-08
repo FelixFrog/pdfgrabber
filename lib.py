@@ -8,7 +8,7 @@ roman = [(1000, "M"), (900, "CM"), (500, "D"), (400, "CD"), (100, "C"), (90, "XC
 def generatelabelsrule(labels):
 	rules = []
 	guessed = False
-	for i, label in enumerate([str(j) for j in labels]):
+	for i, label in enumerate([str(j).strip() for j in labels]):
 		estimated = estimatelabel(label)
 		if label != guessed:
 			rules.append(estimated | {"startpage": i})

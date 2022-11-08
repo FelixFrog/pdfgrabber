@@ -1,18 +1,18 @@
 from Crypto.Signature import PKCS1_v1_5 as PKCS1_v1_5_sig
 from Crypto.Cipher import PKCS1_v1_5 as PKCS1_v1_5_ciph
-from selenium.webdriver.chrome.options import Options
 from Crypto.Random import get_random_bytes
-from base64 import b64encode, b64decode
-from tempfile import TemporaryDirectory
 from Crypto.Util.Padding import unpad
 from Crypto.Hash import HMAC, SHA256
-import xml.etree.ElementTree as et
 from Crypto.PublicKey import RSA
-from selenium import webdriver
 from Crypto.Cipher import AES
+from selenium.webdriver.chrome.options import Options
+from selenium import webdriver
+from tempfile import TemporaryDirectory
+from base64 import b64encode, b64decode
 from zipfile import ZipFile
 from pathlib import Path
 from io import BytesIO
+import xml.etree.ElementTree as et
 import requests
 import string
 import random
@@ -237,16 +237,17 @@ def downloadrpluspdf(url, password, progress):
 
 	return pdf
 
-def unwrap(item):
-	return item.text, item.get("href")
-
-def gentoc(item, level, pages):
+def gentoc(item, level, pages, basedir):
 	toc = []
 	for li in item.findall("{http://www.w3.org/1999/xhtml}li"):
-		text, href = unwrap(li.find("{http://www.w3.org/1999/xhtml}a"))
-		toc.append([level, text, pages.index(href.split("#")[0]) + 1])
+		ref = li.find("{http://www.w3.org/1999/xhtml}a")
+		text, href = ref.text, ref.get("href")
+		if href.startswith("https://") or href.startswith("http://") or not href:
+			continue
+		href = (basedir / href.split("#")[0]).resolve()
+		toc.append([level, text, pages.index(href) + 1])
 		if sub := li.find("{http://www.w3.org/1999/xhtml}ol"):
-			toc.extend(gentoc(sub, level + 1, pages))
+			toc.extend(gentoc(sub, level + 1, pages, basedir))
 	return toc
 
 def downloadrplusepub(url, password, progress):
@@ -257,12 +258,9 @@ def downloadrplusepub(url, password, progress):
 	bookzip = ZipFile(BytesIO(downloadfile(url, progress, 20, 2)))
 	finalpassword = zippassword(password)
 
-	chromeoptions = Options()
-	chromeoptions.add_argument("--headless")
-	chromeoptions.binary_location = lib.chromebinlocation
-
 	with TemporaryDirectory(prefix="rplusepub.", ignore_cleanup_errors=True) as tmpdirfull:
 		tmpdir = Path(tmpdirfull)
+		ns = {"xhtml": "http://www.w3.org/1999/xhtml", "ops": "http://www.idpf.org/2007/ops", "opf": "http://www.idpf.org/2007/opf"}
 		progress(24, "Extracting zip")
 		epubpath = next(i for i in bookzip.namelist() if i.endswith(".epub"))
 		bookzip.extract(epubpath, tmpdir, pwd=finalpassword)
@@ -273,35 +271,41 @@ def downloadrplusepub(url, password, progress):
 		epubzip.extractall(tmpdir)
 		info = et.fromstring(open(tmpdir / "META-INF" / "container.xml").read())
 		contentspath = tmpdir / info.find("{urn:oasis:names:tc:opendocument:xmlns:container}rootfiles").find("{urn:oasis:names:tc:opendocument:xmlns:container}rootfile").get("full-path")
-		contents = et.fromstring(open(tmpdir / contentspath).read())
-		nav = next(i.get("href") for i in contents.find("{http://www.idpf.org/2007/opf}manifest") if i.get("properties") == "nav")
-		epubpath = contentspath.parent
+		contents = et.fromstring(open(contentspath).read())
 
-		navpath = epubpath / nav
+		files = {i.get("id"): i.attrib for i in contents.find("opf:manifest", ns).findall("opf:item", ns)}
+		spine = contents.find("opf:spine", ns)
+		pages = [(contentspath.parent / files[i.get("idref")]["href"]).resolve() for i in spine.findall("opf:itemref", ns)]
+		navpath = contentspath.parent / next(i["href"] for i in files.values() if i.get("properties") == "nav")
+		
 		tocfile = et.fromstring(open(navpath, "r").read())
-		navpath = navpath.parent
-
-		ns = {"xhtml": "http://www.w3.org/1999/xhtml", "ops": "http://www.idpf.org/2007/ops"}
-		pagelistitem = next(i for i in tocfile.find("xhtml:body", ns).findall("xhtml:nav", ns) if i.get("{http://www.idpf.org/2007/ops}type") == "page-list")
-
-		items = pagelistitem.find("xhtml:ol", ns).findall("xhtml:li", ns)
-		for i in items:
-			label, href = unwrap(i.find("{http://www.w3.org/1999/xhtml}a"))
-			labels.append(label)
-			pages.append(href)
 
 		tocitem = next(i for i in tocfile.find("xhtml:body", ns).findall("xhtml:nav", ns) if i.get("{http://www.idpf.org/2007/ops}type") == "toc")
-		toc.extend(gentoc(tocitem.find("xhtml:ol", ns), 1, pages))
+		toc.extend(gentoc(tocitem.find("xhtml:ol", ns), 1, pages, navpath.parent))
+
+		pagelistitem = next(i for i in tocfile.find("xhtml:body", ns).findall("xhtml:nav", ns) if i.get("{http://www.idpf.org/2007/ops}type") == "page-list")
+		labelsdict = {}
+		for i in pagelistitem.find("xhtml:ol", ns).findall("xhtml:li", ns):
+			ref = i.find("xhtml:a", ns)
+			labelsdict[(navpath.parent / ref.get("href")).resolve()] = ref.text
+
+		chromeoptions = Options()
+		chromeoptions.add_argument("--headless")
+		chromeoptions.binary_location = lib.chromebinlocation
 
 		with webdriver.Chrome(options=chromeoptions, executable_path=lib.chromedriverlocation) as wd:
-			for j, pagepath in enumerate(pages):
-				fullpath = navpath / pagepath
-				match = re.search('content.+?width\s{,1}=\s{,1}([0-9]+).+?height\s{,1}=\s{,1}([0-9]+)', open(fullpath).read())
+			for j, fullpath in enumerate(pages):
+				if label := labelsdict.get(fullpath):
+					labels.append(label)
+				else:
+					labels.append(str(j + 1))
 
-				wd.get(fullpath.resolve().as_uri())
+				sizematch = re.search('content.+?width\s{,1}=\s{,1}([0-9]+).+?height\s{,1}=\s{,1}([0-9]+)', open(fullpath).read())
+
+				wd.get(fullpath.as_uri())
 				advancement = (j + 1) / len(pages) * 62 + 36
 				progress(advancement, f"Printing {j + 1}/{len(pages)}")
-				b64page = wd.execute_cdp_cmd("Page.printToPDF", {"printBackground": True, "paperWidth": int(match.group(1))/96, "paperHeight": int(match.group(2))/96, "pageRanges": "1", "marginTop": 0, "marginBottom": 0, "marginLeft": 0, "marginRight": 0})
+				b64page = wd.execute_cdp_cmd("Page.printToPDF", {"printBackground": True, "paperWidth": int(sizematch.group(1))/96, "paperHeight": int(sizematch.group(2))/96, "pageRanges": "1", "marginTop": 0, "marginBottom": 0, "marginLeft": 0, "marginRight": 0})
 				pagepdf = fitz.Document(stream=b64decode(b64page["data"]), filetype="pdf")
 				pdf.insert_pdf(pagepdf)
 
@@ -320,5 +324,8 @@ def downloadbook(token, bookid, data, progress):
 			pdf = downloadrpluspdf(data["url"], data["pwd"], progress)
 		case "RPLUS_EPUB":
 			pdf = downloadrplusepub(data["url"], data["pwd"], progress)
+		case _:
+			print(f"Unsupported format {data['type']}! Contact the developer to get it added!")
+			exit()
 
 	return pdf
