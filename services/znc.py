@@ -18,7 +18,6 @@ import fitz
 
 service = "znc"
 
-#xorprivatekey = bytes([84, 148, 207, 227, 48, 21, 176, 185, 107, 164, 213, 215, 76, 101, 125, 243, 84, 231, 239, 48, 158, 195, 67, 7, 15, 229, 100, 161, 249, 17, 48, 247, 11, 140, 176, 126, 195, 67, 127, 206, 61, 54, 31, 51, 236, 255, 134, 145, 14, 176, 210, 107, 3, 106, 168, 221, 168, 92, 127, 85, 223, 163, 180, 188, 205, 130, 104, 161, 252, 118, 225, 159, 82, 28, 69, 249, 214, 55, 204, 1, 154, 209, 67, 154, 41, 129, 25, 92, 67, 48, 51, 70, 106, 69, 110, 201, 241, 43, 191, 129, 133, 124, 183, 6, 80, 111, 36, 96, 131, 57, 116, 46, 150, 21, 135, 8, 146, 184, 105, 236, 61, 140, 186, 214, 164, 134, 124, 173, 79, 138, 2, 167, 121, 119, 55, 155, 49, 138, 255, 67, 156, 183, 228, 139, 215, 74, 211, 8, 241, 231, 223, 57, 104, 30, 104, 73, 118, 117, 69, 178, 79, 40, 240, 39, 81, 239, 201, 160, 131, 119, 75, 74, 113, 47, 104, 137, 73, 166, 147, 223, 134, 47, 170, 142, 112, 59, 45, 72, 128, 198, 20, 113, 135, 149, 232, 147, 51, 136, 82, 125, 56, 207, 40, 184, 131, 36, 118, 112, 240, 145, 94, 154, 37, 210, 171, 0, 127, 187, 226, 209, 188, 209, 82, 243, 55, 78, 90, 42, 142, 55, 203, 107, 121, 74, 8, 236, 203, 90, 44, 107, 98, 184, 77, 46, 107, 190, 132, 87, 195, 138, 78, 61, 135, 89, 11, 86])
 xorprivatekey = "VJTP4zAVsLlrpNXXTGV981Tn7zCew0MHD+VkofkRMPcLjLB+w0N/zj02HzPs/4aRDrDSawNqqN2oXH9V36O0vM2CaKH8duGfUhxF+dY3zAGa0UOaKYEZXEMwM0ZqRW7J8Su/gYV8twZQbyRggzl0LpYVhwiSuGnsPYy61qSGfK1PigKneXc3mzGK/0Oct+SL10rTCPHn3zloHmhJdnVFsk8o8CdR78mgg3dLSnEvaIlJppPfhi+qjnA7LUiAxhRxh5XokzOIUn04zyi4gyR2cPCRXpol0qsAf7vi0bzRUvM3TloqjjfLa3lKCOzLWixrYrhNLmu+hFfDik49h1kLVg=="
 
 def getlogindata(username, password):
@@ -173,18 +172,6 @@ def downloadbooktab_legacy(token, isbn, pdf, toc, progress, version):
 		# 1.0 and 2.0 books are not supposed have a spine, but I'm not sure
 		if spine:
 			print("Wow! You found a legacy book with a spine! Amazing! Contact the developer immediatly!")
-		'''
-		if not spine:
-			newtoc.append([1, unit.find("unittitle").text, prevlen])
-		elif spine and version == "2.0":
-			partialspine = spine[unit.get("id")]
-			refs = {i.get("page"): (int(i.tag.removeprefix("h")), i.find("title").text) for i in partialspine if i.tag in ["h1", "h2", "h3"]}
-			refs[partialspine.get("page")] = partialspine.find("title").text
-			for j, page in enumerate(config.find("links").findall("page")):
-				if page.get("btbid") in refs:
-					depth, title = refs[page.get("btbid")]
-					newtoc.append([depth, title, prevlen + j])
-		'''
 
 	return pdf, newtoc
 
@@ -241,7 +228,7 @@ def downloadkitaboo(token, isbn, pdf, toc, labels, progress):
 						decpath = tmpdir + "/" + file
 						decfile = chapter.read(file)
 						if not decfile.startswith(b"<?xml"):
-							decfile = decrypt(chapter.read(file), getsecret(isbn))
+							decfile = decrypt(chapter.read(file), getsecret(isbn[:13]))
 						open(decpath, "wb").write(decfile)
 					elif file.endswith("svgz"):
 						decpath = tmpdir + "/" + file
