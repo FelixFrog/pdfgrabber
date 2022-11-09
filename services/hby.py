@@ -69,10 +69,13 @@ def login(username, password):
 def library(token):
 	books = dict()
 	for i in getlibrary(token):
-		if i["subtitle"]:
-			books[str(i["id"])] = {"title": i["title"] + " volume " + i["volume"] + " - " + i["subtitle"], "cover": i["coverBig"]}
-		else:
-			books[str(i["id"])] = {"title": i["title"] + " volume " + i["volume"], "cover": i["coverBig"]}
+		title = i["title"]
+		if volume := i.get("volume"):
+			title += f" {volume}"
+		if subtitle := i.get("subtitle"):
+			title += f" - {subtitle}"
+
+		books[str(i["id"])] = {"title": title, "cover": i["coverBig"]}
 
 	return books
 
