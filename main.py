@@ -9,7 +9,7 @@ from rich.prompt import Confirm
 from rich.progress import Progress
 
 console = Console()
-userid = ""
+userid = False
 
 def login():
 	global userid
@@ -53,6 +53,7 @@ def managetokens():
 	console.print(f"Token for [bold]{servicenow}[/bold] deleted!")
 
 def downloadbook():
+	global userid
 	if not userid:
 		login()
 
@@ -89,7 +90,11 @@ def downloadbook():
 				utils.addtoken(userid, service, token)
 
 	with console.status("[bold green]Fetching library...") as status:
-			books = utils.library(service, token)
+		books = utils.library(service, token)
+
+	if not books:
+		console.print("No books!", style="bold red")
+		return
 
 	table = Table(title=f"Avaliable books for {servicename}")
 	table.add_column("Id", style="cyan")
@@ -142,6 +147,8 @@ def register():
 	console.print(f"Signed up {username}, now you can download books!", style="bold green")
 
 def logout():
+	global userid
+	userid = False
 	console.print("Logged out!", style="bold magenta")
 
 def books():

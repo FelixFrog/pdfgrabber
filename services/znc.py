@@ -8,8 +8,8 @@ from zipfile import ZipFile
 from tempfile import TemporaryDirectory
 from io import BytesIO
 import xml.etree.ElementTree as et
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
+from pathlib import Path
+from playwright.sync_api import sync_playwright
 import json
 import lib
 import re
@@ -202,17 +202,16 @@ def downloadkitaboo(token, isbn, pdf, toc, labels, progress):
 
 	appended = list()
 
-	chromeoptions = Options()
-	chromeoptions.add_argument("--headless")
-	chromeoptions.binary_location = lib.chromebinlocation
-
-	with TemporaryDirectory(prefix="kitaboo.", ignore_cleanup_errors=True) as tmpdir:
+	with TemporaryDirectory(prefix="kitaboo.", ignore_cleanup_errors=True) as tmpname:
+		tmpdir = Path(tmpname)
 		basefiles = ["css", "images", "js", "fonts"]
 		if True:
 			basefiles.remove("images")
 		baseresource.extractall(tmpdir, [file for file in baseresource.namelist() if any(file.startswith("OPS/" + x) for x in basefiles)])
 
-		with webdriver.Chrome(options=chromeoptions, executable_path=lib.chromedriverlocation) as wd:
+		with sync_playwright() as p:
+			browser = p.chromium.launch()
+			bpage = browser.new_page()
 			chapters = base.find("chapters").findall("chapter")
 			unitwidth = (93 - 10) / len(chapters)
 			for off, i in enumerate(chapters):
@@ -225,13 +224,13 @@ def downloadkitaboo(token, isbn, pdf, toc, labels, progress):
 					if "thumbnail" in file:
 						continue
 					elif file.endswith("xhtml"):
-						decpath = tmpdir + "/" + file
+						decpath = tmpdir / file
 						decfile = chapter.read(file)
 						if not decfile.startswith(b"<?xml"):
 							decfile = decrypt(chapter.read(file), getsecret(isbn[:13]))
 						open(decpath, "wb").write(decfile)
 					elif file.endswith("svgz"):
-						decpath = tmpdir + "/" + file
+						decpath = tmpdir / file
 						decfile = gzip.decompress(decryptheader(chapter.read(file), getsecret(isbn)))
 						open(decpath, "wb").write(decfile)
 					else:
@@ -243,14 +242,15 @@ def downloadkitaboo(token, isbn, pdf, toc, labels, progress):
 					pagefile = pagesmap[page]
 					appended.append(pagefile)
 
-					fullpath = tmpdir + "/OPS/" + pagefile
-					match = re.search('content.+?width\s{,1}=\s{,1}([0-9]+).+?height\s{,1}=\s{,1}([0-9]+)', open(fullpath).read())
+					fullpath = tmpdir / "OPS" / pagefile
+					sizematch = re.search('content.+?width\s{,1}=\s{,1}([0-9]+).+?height\s{,1}=\s{,1}([0-9]+)', open(fullpath).read())
 
-					wd.get('file://' + fullpath)
+					bpage.goto(fullpath.as_uri())
 					progress(round(unitstart + unitwidth / 4 + pagewidth * j), f"Rendering page {j + 1}/{len(pages)}")
-					b64page = wd.execute_cdp_cmd("Page.printToPDF", {"printBackground": True, "paperWidth": int(match.group(1))/96, "paperHeight": int(match.group(2))/96, "pageRanges": "1", "marginTop": 0, "marginBottom": 0, "marginLeft": 0, "marginRight": 0})
-					pagepdf = fitz.Document(stream=b64decode(b64page["data"]), filetype="pdf")
+					pdfpagebytes = bpage.pdf(print_background=True, width=sizematch.group(1) + "px", height=sizematch.group(2) + "px", page_ranges="1")
+					pagepdf = fitz.Document(stream=pdfpagebytes, filetype="pdf")
 					pdf.insert_pdf(pagepdf)
+			browser.close()
 
 	progress(93, "Applying toc")
 	tocobj = et.fromstring(baseresource.read("OPS/toc.xml").decode())

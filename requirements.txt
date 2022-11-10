@@ -1,7 +1,7 @@
 pymupdf
-selenium
 rich
 requests
 pycryptodome
 umsgpack
 tinydb
+playwright

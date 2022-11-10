@@ -2,23 +2,23 @@ import requests
 import fitz
 import lib
 
-service = "hby"
+service = "hbs"
 
 def getlogindata(username, password):
 	r = requests.get("https://bce.mondadorieducation.it//app/mondadorieducation/login/loginJsonp", params={"username": username, "password": password})
 	return r.json()
 
-def getsessiontoken(jwt,internalusername,sessionid):
+def getsessiontoken(jwt, internalusername, sessionid):
 	data = {"username": internalusername, "sessionId": sessionid, "jwt": jwt}
 	r = requests.post("https://ms-api.hubscuola.it/user/internalLogin", json=data)
 	return r.json()
 
-def getlibrary(token):
-	r = requests.get("https://ms-api.hubscuola.it/getLibrary/young", headers={"Token-Session": token})
+def getlibrary(token, platform):
+	r = requests.get("https://ms-api.hubscuola.it/getLibrary/" +  platform, headers={"Token-Session": token})
 	return r.json()
 
-def getbookinfo(token, bookid):
-	r = requests.get("https://ms-api.hubscuola.it/meyoung/publication/" + str(bookid), headers={"Token-Session": token})
+def getbookinfo(token, bookid, platform):
+	r = requests.get("https://ms-api.hubscuola.it/me" + platform + "/publication/" + str(bookid), headers={"Token-Session": token})
 	return r.json()
 
 def downloadchapter(token, bookid, chapterid, progress, total, done):
@@ -41,8 +41,8 @@ def checktoken(token):
 	r = requests.get("https://ms-api.hubscuola.it/annotation/user-preferences", headers={"Token-Session": token})
 	return not "not valid" in r.text
 
-def getauth(jwt, bookid):
-	r = requests.post("https://ms-pdf.hubscuola.it/i/d/" + bookid + "/auth", json={"jwt": jwt, "origin": "https://young.hubscuola.it/viewer/" + bookid + "?page=1"}, headers={"PSPDFKit-Platform": "web", "PSPDFKit-Version": "protocol=3, client=2020.6.0, client-git=63c8a36705"})
+def getauth(jwt, bookid, platform):
+	r = requests.post("https://ms-pdf.hubscuola.it/i/d/" + bookid + "/auth", json={"jwt": jwt, "origin": "https://" + platform + ".hubscuola.it/viewer/" + bookid + "?page=1"}, headers={"PSPDFKit-Platform": "web", "PSPDFKit-Version": "protocol=3, client=2020.6.0, client-git=63c8a36705"})
 	return r.json()
 
 def downloadpdf(token, bookid, layerhandle, progress, total, done):
@@ -68,14 +68,17 @@ def login(username, password):
 
 def library(token):
 	books = dict()
-	for i in getlibrary(token):
+	def getbooktitle(book):
 		title = i["title"]
 		if volume := i.get("volume"):
 			title += f" {volume}"
 		if subtitle := i.get("subtitle"):
 			title += f" - {subtitle}"
+		return title
 
-		books[str(i["id"])] = {"title": title, "cover": i["coverBig"]}
+	for platform in ["young", "kids"]:
+		for i in getlibrary(token, platform):
+			books[str(i["id"])] = {"title": getbooktitle(i), "cover": i["coverBig"], "platform": platform}
 
 	return books
 
@@ -118,10 +121,10 @@ def downloadbook_legacy(token, bookid, data, progress):
 
 def downloadbook(token, bookid, data, progress):
 	progress(0, "Getting book info")
-	bookinfo = getbookinfo(token, bookid)
+	bookinfo = getbookinfo(token, bookid, data["platform"])
 
 	progress(2, "Fetching authentication data")
-	auth = getauth(bookinfo["jwt"], bookid)
+	auth = getauth(bookinfo["jwt"], bookid, data["platform"])
 
 	progress(4, "Downloading unencrypted pdf")
 	pdfbytes = downloadpdf(auth["token"], bookid, auth["layerHandle"], progress, 91, 4)

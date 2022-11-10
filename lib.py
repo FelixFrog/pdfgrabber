@@ -1,8 +1,5 @@
 import re
 
-chromebinlocation = "/Users/fra/Downloads/Scuola/libri/pdfgrabber/renderer/Chromium.app/Contents/MacOS/Chromium"
-chromedriverlocation = "/Users/fra/Downloads/Scuola/libri/pdfgrabber/renderer/chromedriver"
-
 roman = [(1000, "M"), (900, "CM"), (500, "D"), (400, "CD"), (100, "C"), (90, "XC"), (50, "L"), (40, "XL"), (10, "X"), (9, "IX"), (5, "V"), (4, "IV"), (1, "I")]
 
 def generatelabelsrule(labels):

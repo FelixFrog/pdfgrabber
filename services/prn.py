@@ -5,8 +5,7 @@ from Crypto.Util.Padding import unpad
 from Crypto.Hash import HMAC, SHA256
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import AES
-from selenium.webdriver.chrome.options import Options
-from selenium import webdriver
+from playwright.sync_api import sync_playwright
 from tempfile import TemporaryDirectory
 from base64 import b64encode, b64decode
 from zipfile import ZipFile
@@ -289,11 +288,9 @@ def downloadrplusepub(url, password, progress):
 			ref = i.find("xhtml:a", ns)
 			labelsdict[(navpath.parent / ref.get("href")).resolve()] = ref.text
 
-		chromeoptions = Options()
-		chromeoptions.add_argument("--headless")
-		chromeoptions.binary_location = lib.chromebinlocation
-
-		with webdriver.Chrome(options=chromeoptions, executable_path=lib.chromedriverlocation) as wd:
+		with sync_playwright() as p:
+			browser = p.chromium.launch()
+			page = browser.new_page()
 			for j, fullpath in enumerate(pages):
 				if label := labelsdict.get(fullpath):
 					labels.append(label)
@@ -302,12 +299,13 @@ def downloadrplusepub(url, password, progress):
 
 				sizematch = re.search('content.+?width\s{,1}=\s{,1}([0-9]+).+?height\s{,1}=\s{,1}([0-9]+)', open(fullpath).read())
 
-				wd.get(fullpath.as_uri())
+				page.goto(fullpath.as_uri())
 				advancement = (j + 1) / len(pages) * 62 + 36
 				progress(advancement, f"Printing {j + 1}/{len(pages)}")
-				b64page = wd.execute_cdp_cmd("Page.printToPDF", {"printBackground": True, "paperWidth": int(sizematch.group(1))/96, "paperHeight": int(sizematch.group(2))/96, "pageRanges": "1", "marginTop": 0, "marginBottom": 0, "marginLeft": 0, "marginRight": 0})
-				pagepdf = fitz.Document(stream=b64decode(b64page["data"]), filetype="pdf")
+				pdfpagebytes = page.pdf(print_background=True, width=sizematch.group(1) + "px", height=sizematch.group(2) + "px", page_ranges="1")
+				pagepdf = fitz.Document(stream=pdfpagebytes, filetype="pdf")
 				pdf.insert_pdf(pagepdf)
+			browser.close()
 
 	progress(98, "Applying toc/labels")
 	pdf.set_page_labels(lib.generatelabelsrule(labels))
