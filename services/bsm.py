@@ -66,6 +66,8 @@ def library(token):
 		books[str(i["id"])] = {"title": i["title"], "revision": i["current_edition"]["revision"], "cover": i["cover"]}
 
 	for i in getpreactivations(token):
+		if not i["activated"]:
+			continue
 		for book in i["books"]:
 			books[str(book["id"])] = {"title": book["title"], "revision": book["current_edition"]["revision"], "cover": book["cover"]}
 
