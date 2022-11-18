@@ -243,7 +243,7 @@ def downloadkitaboo(token, isbn, pdf, toc, labels, progress):
 					appended.append(pagefile)
 
 					fullpath = tmpdir / "OPS" / pagefile
-					sizematch = re.search('content.+?width\s{,1}=\s{,1}([0-9]+).+?height\s{,1}=\s{,1}([0-9]+)', open(fullpath).read())
+					sizematch = re.search('content.+?width\s{,1}=\s{,1}([0-9]+).+?height\s{,1}=\s{,1}([0-9]+)', open(fullpath, encoding="utf-8").read())
 
 					bpage.goto(fullpath.as_uri())
 					progress(round(unitstart + unitwidth / 4 + pagewidth * j), f"Rendering page {j + 1}/{len(pages)}")

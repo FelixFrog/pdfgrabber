@@ -5,15 +5,21 @@ from hashlib import sha256
 from pathlib import Path
 import os
 
+os.chdir(Path(__file__).parent)
+
 db = TinyDB("db.json")
 usertable = db.table("users")
 tokentable = db.table("tokens")
 booktable = db.table("books")
 
 services = {"bsm": "bSmart", "ees": "easyeschool", "hbs": "Mondadori HUB Scuola", "mcm": "MEE2", "myl": "MyLim", "prn": "Pearson eText / Reader+", "sbk": "Scuolabook", "znc": "Zanichelli Booktab / Kitaboo", "dbk": "Laterza diBooK", "olb": "Oxford Learner’s Bookshelf"}
+oneshots = {"ktb": "Kitaboo"}
 
-def getservice(name):
-	service = importlib.import_module("services." + name)
+def getservice(name, oneshot=False):
+	if oneshot:
+		service = importlib.import_module("services.oneshot." + name)
+	else:
+		service = importlib.import_module("services." + name)
 	return service
 
 def login(servicename, username, password):
@@ -24,12 +30,10 @@ def login(servicename, username, password):
 def checkpath(path):
 	os.makedirs(path.parent, exist_ok=True)
 
-
 def downloadbook(servicename, token, bookid, data, progress):
 	service = getservice(servicename)
 	pdfpath = Path("files") / servicename / (f"{bookid}.pdf")
 	checkpath(pdfpath)
-	#pdfpath = "files/" + servicename + "/" + bookid + ".pdf"
 	
 	pdf = service.downloadbook(token, bookid, data, progress)
 	pdfnow = fitz.utils.get_pdf_now()
@@ -41,6 +45,28 @@ def downloadbook(servicename, token, bookid, data, progress):
 	#pdf.save(pdfpath, garbage=3, clean=True, linear=True)
 	pdf.save(pdfpath)
 	booktable.upsert({"service": servicename, "bookid": bookid, "title": data["title"], "pages": len(pdf), "path": str(pdfpath)}, (Query().service == servicename) and (Query().bookid == bookid))
+	return pdfpath
+
+def downloadoneshot(servicename, url, progress):
+	service = getservice(servicename, oneshot=True)
+
+	result = service.downloadbook(url, progress)
+	if not result:
+		print("Invalid link!")
+		exit()
+	pdf, bookid, title = result
+	pdfpath = Path("files") / servicename / (f"{bookid}.pdf")
+	checkpath(pdfpath)
+
+	pdfnow = fitz.utils.get_pdf_now()
+
+	metadata = {'producer': "PyMuPDF " + fitz.version[0], 'format': 'PDF 1.7', 'encryption': None, 'author': 'none', 'modDate': pdfnow, 'keywords': 'none', 'title': title, 'creationDate': pdfnow, 'creator': "pdfgrabber1.0", 'subject': 'none'}
+	pdf.set_metadata(metadata)
+	progress(99, "Saving pdf")
+	# This saves a bit of spaces but sometimes causes the disappearence of the first page. Dunno Y
+	#pdf.save(pdfpath, garbage=3, clean=True, linear=True)
+	pdf.save(pdfpath)
+	booktable.upsert({"service": servicename, "bookid": bookid, "title": title, "pages": len(pdf), "path": str(pdfpath)}, (Query().service == servicename) and (Query().bookid == bookid))
 	return pdfpath
 
 def cover(servicename, token, bookid, data):
@@ -69,6 +95,10 @@ def new_login(username, password):
 
 def listbooks():
 	return booktable.all()
+
+def geturlmatch(servicename):
+	service = getservice(servicename, oneshot=True)
+	return service.urlmatch
 
 def deletetoken(service, userid):
 	tokentable.remove((Query().service == service) & (Query().owner == userid))

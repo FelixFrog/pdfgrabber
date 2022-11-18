@@ -1,6 +1,7 @@
 import utils
 import sys
 import os
+import re
 from rich.console import Console
 from rich.table import Table
 from rich.rule import Rule
@@ -23,17 +24,17 @@ def login():
 		password = Prompt.ask("[b]pdfgrabber[/b] password", password=True)
 	console.print("Logged in!", style="green")
 
-def selectservice():
+def selectservice(services):
 	table = Table(title="Avaliable services")
 	table.add_column("Code", style="cyan")
 	table.add_column("Name", style="green")
 
-	for code, name in utils.services.items():
+	for code, name in services.items():
 		table.add_row(code, name)
 
 	console.print(table)
 
-	return Prompt.ask("Choose a service", choices=utils.services.keys())
+	return Prompt.ask("Choose a service", choices=services.keys())
 
 def managetokens():
 	if not userid:
@@ -57,7 +58,7 @@ def downloadbook():
 	if not userid:
 		login()
 
-	service = selectservice()
+	service = selectservice(utils.services)
 	token = utils.gettoken(userid, service)
 	servicename = utils.services[service]
 	
@@ -136,6 +137,31 @@ def downloadbook():
 
 		console.print(f"[bold green]Done![/bold green] Your book is in {pdfpath}")
 
+def downloadoneshot():
+	service = selectservice(utils.oneshots)
+	servicename = utils.oneshots[service]
+	urlmatch = utils.geturlmatch(service)
+
+	url = ""
+	first = True
+	while not re.fullmatch(urlmatch, url):
+		if not first:
+			console.print(f"Invalid url for {servicename}!", style="red")
+		url = Prompt.ask(f"[b]{servicename}[/b] url")
+
+	with Progress() as progress:
+		maintask = progress.add_task("Starting...", total=100)
+		def progressfun(update, status=""):
+			if status:
+				progress.update(maintask, description=status, completed=update)
+			else:
+				progress.update(maintask, completed=update)
+
+		pdfpath = utils.downloadoneshot(service, url, progressfun)
+		progress.update(maintask, description="Done", completed=100)
+
+	console.print(f"[bold green]Done![/bold green] Your book is in {pdfpath}")
+
 def register():
 	username = Prompt.ask("Username")
 	password = Prompt.ask("Password", password=True)
@@ -170,17 +196,19 @@ def main():
 		exit()
 	console.print(Rule("pdfgrabber 1.0"))
 	while True:
-		action = Prompt.ask("[magenta]What do you want to do?[/magenta] (register new user, download a book, logout, manage tokens, view all books, quit)", choices=["r", "d", "t", "l", "b", "q"], default="d")
+		action = Prompt.ask("[magenta]What do you want to do?[/magenta] ((r)egister new user, (d)ownload from your libraries, download from a (o)ne-shot link, (l)ogout, manage (t)okens, (v)iew all books, (q)uit)", choices=["r", "d", "o", "l", "t", "v", "q"], default="d")
 		match action:
 			case "r":
 				register()
 			case "d":
 				downloadbook()
+			case "o":
+				downloadoneshot()
 			case "l":
 				logout()
 			case "t":
 				managetokens()
-			case "b":
+			case "v":
 				books()
 			case "q":
 				console.print("Bye!", style="bold green")
