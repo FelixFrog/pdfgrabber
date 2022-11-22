@@ -1,8 +1,11 @@
 import requests
 import fitz
 import lib
+import config
 
 service = "hbs"
+
+config = config.getconfig()
 
 def getlogindata(username, password):
 	r = requests.get("https://bce.mondadorieducation.it//app/mondadorieducation/login/loginJsonp", params={"username": username, "password": password})
@@ -114,12 +117,13 @@ def downloadbook_legacy(token, bookid, data, progress):
 						pagecount += 1
 
 	progress(98, "Applying toc/labels")
-	labels = bookinfo["multiRangeIndex"]["valToLabel"].values()
-	pdf.set_page_labels(lib.generatelabelsrule(labels))
+	if config.getboolean(service, "PageLabels", fallback=False):
+		labels = bookinfo["multiRangeIndex"]["valToLabel"].values()
+		pdf.set_page_labels(lib.generatelabelsrule(labels))
 	pdf.set_toc(toc)
 	return pdf
 
-def downloadbook(token, bookid, data, progress):
+def downloadbook_new(token, bookid, data, progress):
 	progress(0, "Getting book info")
 	bookinfo = getbookinfo(token, bookid, data["platform"])
 
@@ -150,7 +154,15 @@ def downloadbook(token, bookid, data, progress):
 					if k in bookinfo["pagesId"]:
 						pagecount += 1
 
-	#labels = bookinfo["multiRangeIndex"]["valToLabel"].values()
-	#pdf.set_page_labels(lib.generatelabelsrule(labels))
+	if config.getboolean(service, "PageLabels", fallback=False):
+		labels = bookinfo["multiRangeIndex"]["valToLabel"].values()
+		pdf.set_page_labels(lib.generatelabelsrule(labels))
 	pdf.set_toc(toc)
+	return pdf
+
+def downloadbook(token, bookid, data, progress):
+	if config.getboolean(service, "UseLegecy", fallback=False):
+		pdf = downloadbook_legacy(token, bookid, data, progress)
+	else:
+		pdf = downloadbook_new(token, bookid, data, progress)
 	return pdf

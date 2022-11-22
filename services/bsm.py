@@ -6,10 +6,13 @@ from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
 import fitz
 import lib
+import config
 
 service = "bsm"
 
 key = bytes([30, 0, 184, 152, 115, 19, 157, 33, 4, 237, 80, 26, 139, 248, 104, 155])
+
+config = config.getconfig()
 
 def getlogindata(username, password):
 	r = requests.post("https://www.bsmart.it/api/v5/session", data={"password": password, "email": username})
@@ -65,11 +68,12 @@ def library(token):
 	for i in getlibrary(token):
 		books[str(i["id"])] = {"title": i["title"], "revision": i["current_edition"]["revision"], "cover": i["cover"]}
 
-	for i in getpreactivations(token):
-		if not i["activated"]:
-			continue
-		for book in i["books"]:
-			books[str(book["id"])] = {"title": book["title"], "revision": book["current_edition"]["revision"], "cover": book["cover"]}
+	if config.getboolean(service, "Preactivations", fallback=True):
+		for i in getpreactivations(token):
+			if not i["activated"]:
+				continue
+			for book in i["books"]:
+				books[str(book["id"])] = {"title": book["title"], "revision": book["current_edition"]["revision"], "cover": book["cover"]}
 
 	return books
 

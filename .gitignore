@@ -2,6 +2,8 @@ files/
 
 db.json
 
+config.ini
+
 .DS_Store
 .AppleDouble
 .LSOverride

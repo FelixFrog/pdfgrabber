@@ -4,8 +4,11 @@ from tinydb import TinyDB, Query
 from hashlib import sha256
 from pathlib import Path
 import os
+import config
 
 os.chdir(Path(__file__).parent)
+
+config = config.getconfig()
 
 db = TinyDB("db.json")
 usertable = db.table("users")
@@ -38,12 +41,16 @@ def downloadbook(servicename, token, bookid, data, progress):
 	pdf = service.downloadbook(token, bookid, data, progress)
 	pdfnow = fitz.utils.get_pdf_now()
 
+	author = config.get(servicename, "Author", fallback="none")
+
 	metadata = {'producer': "PyMuPDF " + fitz.version[0], 'format': 'PDF 1.7', 'encryption': None, 'author': 'none', 'modDate': pdfnow, 'keywords': 'none', 'title': data["title"], 'creationDate': pdfnow, 'creator': "pdfgrabber1.0", 'subject': 'none'}
 	pdf.set_metadata(metadata)
 	progress(99, "Saving pdf")
-	# This saves a bit of spaces but sometimes causes the disappearence of the first page. Dunno Y
-	#pdf.save(pdfpath, garbage=3, clean=True, linear=True)
-	pdf.save(pdfpath)
+	if config.getboolean(servicename, "Compress", fallback=False):
+		pdf.save(pdfpath, garbage=config.getint(servicename, "Garbage", fallback=3), clean=config.getboolean(servicename, "Clean", fallback=True), linear=config.getboolean(servicename, "Linearize", fallback=True))
+	else:
+		pdf.save(pdfpath)
+
 	booktable.upsert({"service": servicename, "bookid": bookid, "title": data["title"], "pages": len(pdf), "path": str(pdfpath)}, (Query().service == servicename) and (Query().bookid == bookid))
 	return pdfpath
 
@@ -60,12 +67,16 @@ def downloadoneshot(servicename, url, progress):
 
 	pdfnow = fitz.utils.get_pdf_now()
 
-	metadata = {'producer': "PyMuPDF " + fitz.version[0], 'format': 'PDF 1.7', 'encryption': None, 'author': 'none', 'modDate': pdfnow, 'keywords': 'none', 'title': title, 'creationDate': pdfnow, 'creator': "pdfgrabber1.0", 'subject': 'none'}
+	author = config.get(servicename, "Author", fallback="none")
+
+	metadata = {'producer': "PyMuPDF " + fitz.version[0], 'format': 'PDF 1.7', 'encryption': None, 'author': author, 'modDate': pdfnow, 'keywords': 'none', 'title': title, 'creationDate': pdfnow, 'creator': "pdfgrabber1.0", 'subject': 'none'}
 	pdf.set_metadata(metadata)
 	progress(99, "Saving pdf")
-	# This saves a bit of spaces but sometimes causes the disappearence of the first page. Dunno Y
-	#pdf.save(pdfpath, garbage=3, clean=True, linear=True)
-	pdf.save(pdfpath)
+	if config.getboolean(servicename, "Compress", fallback=False):
+		pdf.save(pdfpath, garbage=config.getint(servicename, "Garbage", fallback=3), clean=config.getboolean(servicename, "Clean", fallback=True), linear=config.getboolean(servicename, "Linearize", fallback=True))
+	else:
+		pdf.save(pdfpath)
+
 	booktable.upsert({"service": servicename, "bookid": bookid, "title": title, "pages": len(pdf), "path": str(pdfpath)}, (Query().service == servicename) and (Query().bookid == bookid))
 	return pdfpath
 
@@ -87,11 +98,17 @@ def checktoken(servicename, token):
 	service = getservice(servicename)
 	return service.checktoken(token)
 
-def new_login(username, password):
+def new_login(username, password, checkpassword=True):
 	passwordhash = sha256(password.encode()).hexdigest()
-	user = usertable.get((Query().password == passwordhash) & (Query().name == username))
+	if checkpassword:
+		user = usertable.get((Query().password == passwordhash) & (Query().name == username))
+	else:
+		user = usertable.get((Query().name == username))
 	if user:
 		return user.doc_id
+
+def getusers():
+	return [i["name"] for i in usertable.all()]
 
 def listbooks():
 	return booktable.all()

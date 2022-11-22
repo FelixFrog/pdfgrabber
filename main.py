@@ -8,20 +8,27 @@ from rich.rule import Rule
 from rich.prompt import Prompt
 from rich.prompt import Confirm
 from rich.progress import Progress
+import config
 
 console = Console()
 userid = False
+
+config = config.getconfig()
 
 def login():
 	global userid
 	username, password = "", ""
 	first = True
-	while not (userid := utils.new_login(username, password)):
+	checkpassword = config.getboolean("pdfgrabber", "AskPassword", fallback=False)
+	while not (userid := utils.new_login(username, password, checkpassword)):
 		if not first:
 			console.print("Invalid login!", style="red")
 		first = False
-		username = Prompt.ask("[b]pdfgrabber[/b] username")
-		password = Prompt.ask("[b]pdfgrabber[/b] password", password=True)
+		if checkpassword:
+			username = Prompt.ask("[b]pdfgrabber[/b] username")
+			password = Prompt.ask("[b]pdfgrabber[/b] password", password=True)
+		else:
+			username = Prompt.ask("[b]pdfgrabber[/b] username", choices=utils.getusers())
 	console.print("Logged in!", style="green")
 
 def selectservice(services):
@@ -103,8 +110,10 @@ def downloadbook():
 	table.add_column("Title", style="green")
 
 	id2bookid = []
+	downloadcovers = config.getboolean(service, "Cover", fallback=False)
 	for (i, (bid, book)) in enumerate(books.items()):
-		coverpath = utils.cover(service, token, bid, book)
+		if downloadcovers:
+			coverpath = utils.cover(service, token, bid, book)
 		table.add_row(str(i), bid, book['title'])
 		id2bookid.append(bid)
 
@@ -138,6 +147,10 @@ def downloadbook():
 		console.print(f"[bold green]Done![/bold green] Your book is in {pdfpath}")
 
 def downloadoneshot():
+	if config.getboolean("pdfgrabber", "OneshotWarning", fallback=True):
+		answer = Confirm.ask("[bold red]Oneshot services are unstable and lead to lower-quality books than normal services (they often have only pictures/unselectable text). Do you wish to continue?[/bold red]", default=False)
+		if not answer:
+			return
 	service = selectservice(utils.oneshots)
 	servicename = utils.oneshots[service]
 	urlmatch = utils.geturlmatch(service)

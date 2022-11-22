@@ -15,10 +15,13 @@ import lib
 import re
 import gzip
 import fitz
+import config
 
 service = "znc"
 
 xorprivatekey = "VJTP4zAVsLlrpNXXTGV981Tn7zCew0MHD+VkofkRMPcLjLB+w0N/zj02HzPs/4aRDrDSawNqqN2oXH9V36O0vM2CaKH8duGfUhxF+dY3zAGa0UOaKYEZXEMwM0ZqRW7J8Su/gYV8twZQbyRggzl0LpYVhwiSuGnsPYy61qSGfK1PigKneXc3mzGK/0Oct+SL10rTCPHn3zloHmhJdnVFsk8o8CdR78mgg3dLSnEvaIlJppPfhi+qjnA7LUiAxhRxh5XokzOIUn04zyi4gyR2cPCRXpol0qsAf7vi0bzRUvM3TloqjjfLa3lKCOzLWixrYrhNLmu+hFfDik49h1kLVg=="
+
+config = config.getconfig()
 
 def getlogindata(username, password):
 	logindata = {"username": username, "password": password, "device_id": get_random_bytes(8).hex(), "device_name": "iPhone Grosso (tm)", "dry_run": False}
@@ -88,15 +91,17 @@ def decryptsearch(textdata):
 
 def getoutline(tree, appended, offset, level):
 	subtoc = []
-	if tree.get("feild2"):
-		subtoc.append([level, tree.get("feild2") + " - " + tree.get("title"), appended.index(tree.get("href")) + offset])
-	else:
-		subtoc.append([level, tree.get("title"), appended.index(tree.get("href")) + offset])
+	href = tree.get("href")
+	if href in appended:
+		if tree.get("feild2"):
+			subtoc.append([level, tree.get("feild2") + " - " + tree.get("title"), appended.index(href) + offset])
+		else:
+			subtoc.append([level, tree.get("title"), appended.index(href) + offset])
 	for i in tree.findall("node"):
 		subtoc.extend(getoutline(i, appended, offset, level + 1))
 	return subtoc
 
-def downloadbooktab3(token, isbn, pdf, toc, labels, progress, encryption):
+def downloadbooktab3(token, isbn, pdf, toc, labels, progress, encryption, skipfirst):
 	newtoc = toc.copy()
 	newlabels = labels.copy()
 
@@ -108,6 +113,8 @@ def downloadbooktab3(token, isbn, pdf, toc, labels, progress, encryption):
 
 	unitwidth = (95 - 5) / len(units)
 	for i, unit in enumerate(units):
+		if skipfirst and i == 0:
+			continue
 		btbid, unitid = unit.get("btbid"), unit.get("id")
 		basepath = next(j for j in unit.find("resources").findall("resource") if j.get("type") == "base")
 		basepath = next(j.text for j in basepath.findall("download") if j.get("device") == "desktop")
@@ -145,7 +152,7 @@ def downloadbooktab3(token, isbn, pdf, toc, labels, progress, encryption):
 
 	return pdf, newtoc, newlabels
 
-def downloadbooktab_legacy(token, isbn, pdf, toc, progress, version):
+def downloadbooktab_legacy(token, isbn, pdf, toc, progress, version, skipfirst):
 	newtoc = []
 
 	progress(5, "Downloading info")
@@ -157,6 +164,8 @@ def downloadbooktab_legacy(token, isbn, pdf, toc, progress, version):
 
 	unitwidth = 90 / len(units)
 	for i, unit in enumerate(units):
+		if skipfirst and i == 0:
+			continue
 		if not (unitid := unit.get("id")):
 			unitid = unit.get("href").removesuffix(".zip")
 		progress(5 + unitwidth * i, f"Downloading unit {i + 1}/{len(units)}")
@@ -189,23 +198,24 @@ def getbookfiles(token, isbn, encryption=False):
 		tocelems = {i.get("id"): i for i in spine.findall("unit")}
 	return volumeinfo, tocelems
 
-def downloadkitaboo(token, isbn, pdf, toc, labels, progress):
+def downloadkitaboo(token, isbn, pdf, toc, labels, progress, skipfirst):
 	newtoc = toc.copy()
 	newlabels = labels.copy()
+
+	prevlen = len(pdf) + 1
 
 	progress(5, "Downloading base.zip")
 	baseresource = downloadresource(token, isbn, "base.zip", progress, 5, 5)
 	baseresource = ZipFile(BytesIO(baseresource))
 	base = et.fromstring(baseresource.read("OPS/book_toc.xml").decode())
 	pagesmap = {i.get("folioNumber"): i.get("src") for i in sorted(base.find("pages").findall("page"), key=lambda i: int(i.get("sequenceNumber")))}
-	newlabels.extend(list(pagesmap))
 
 	appended = list()
 
 	with TemporaryDirectory(prefix="kitaboo.", ignore_cleanup_errors=True) as tmpname:
 		tmpdir = Path(tmpname)
 		basefiles = ["css", "images", "js", "fonts"]
-		if True:
+		if config.getboolean(service, "RemoveImages", fallback=True):
 			basefiles.remove("images")
 		baseresource.extractall(tmpdir, [file for file in baseresource.namelist() if any(file.startswith("OPS/" + x) for x in basefiles)])
 
@@ -215,6 +225,8 @@ def downloadkitaboo(token, isbn, pdf, toc, labels, progress):
 			chapters = base.find("chapters").findall("chapter")
 			unitwidth = (93 - 10) / len(chapters)
 			for off, i in enumerate(chapters):
+				if skipfirst and off == 0:
+					continue
 				unitstart = 10 + (off * unitwidth)
 				progress(unitstart, f"Downloading unit {off + 1}/{len(chapters)}")
 				chapter = downloadresource(token, isbn, i.find("chapterPagesFile").text, progress, unitwidth / 4, unitstart)
@@ -231,7 +243,7 @@ def downloadkitaboo(token, isbn, pdf, toc, labels, progress):
 						open(decpath, "wb").write(decfile)
 					elif file.endswith("svgz"):
 						decpath = tmpdir / file
-						decfile = gzip.decompress(decryptheader(chapter.read(file), getsecret(isbn)))
+						decfile = gzip.decompress(decryptheader(chapter.read(file), getsecret(isbn[:13])))
 						open(decpath, "wb").write(decfile)
 					else:
 						chapter.extract(file, tmpdir)
@@ -240,6 +252,7 @@ def downloadkitaboo(token, isbn, pdf, toc, labels, progress):
 				pagewidth = (unitwidth * 3) / (4 * len(pages))
 				for j, page in enumerate(pages):
 					pagefile = pagesmap[page]
+					newlabels.append(page)
 					appended.append(pagefile)
 
 					fullpath = tmpdir / "OPS" / pagefile
@@ -252,10 +265,9 @@ def downloadkitaboo(token, isbn, pdf, toc, labels, progress):
 					pdf.insert_pdf(pagepdf)
 			browser.close()
 
-	progress(93, "Applying toc")
 	tocobj = et.fromstring(baseresource.read("OPS/toc.xml").decode())
 	for i in tocobj.find("toc").findall("node"):
-		newtoc.extend(getoutline(i, appended, 1, 1))
+		newtoc.extend(getoutline(i, appended, prevlen, 1))
 
 	return pdf, newtoc, newlabels
 
@@ -287,9 +299,9 @@ def downloadbook(token, bookid, data, progress):
 	labels = []
 	relatedisbns = data["relatedisbns"]
 
-	# with the and False we disable the search for the index since it leads to a duplicate index most of the times
+	skipfirst = config.getboolean(service, "SkipFirstChapter", fallback=False)
 	progress(0, "Searching for book index")
-	if data["format"] != "booktab" and False:
+	if config.getboolean(service, "SearchIndex", fallback=False) and data["format"] != "booktab":
 		for isbn in relatedisbns + [bookid]:
 			indice = getadditional(isbn, "_02_IND.pdf")
 			if indice:
@@ -298,24 +310,27 @@ def downloadbook(token, bookid, data, progress):
 				toc.append([1, "Indice dei contenuti", 1])
 				labels.extend(["Indice"] * len(pdf))
 				break
+		else:
+			skipfirst = False
 
 	if data["format"] == "booktab":
 		if data["version"] in ["1.0", "2.0"]:
-			pdf, toc = downloadbooktab_legacy(token, bookid, pdf, toc, progress, data["version"])
+			pdf, toc = downloadbooktab_legacy(token, bookid, pdf, toc, progress, data["version"], skipfirst)
 		else:
-			pdf, toc, labels = downloadbooktab3(token, bookid, pdf, toc, labels, progress, data["encryption"])
+			pdf, toc, labels = downloadbooktab3(token, bookid, pdf, toc, labels, progress, data["encryption"], skipfirst)
 	else:
-		pdf, toc, labels = downloadkitaboo(token, bookid, pdf, toc, labels, progress)
+		pdf, toc, labels = downloadkitaboo(token, bookid, pdf, toc, labels, progress, skipfirst)
 
 	progress(95, "Searching for backcover")
-	for isbn in relatedisbns + [bookid]:
-		quarta = getadditional(isbn, "_03_ALT.pdf")
-		if quarta:
-			quartapdf = fitz.Document(stream=quarta,filetype="pdf")
-			pdf.insert_pdf(quartapdf)
-			toc.append([1, "Quarta di copertina", len(pdf)])
-			labels.extend(["Copertina"] * len(quartapdf))
-			break
+	if config.getboolean(service, "SearchBackcover", fallback=True):
+		for isbn in relatedisbns + [bookid]:
+			quarta = getadditional(isbn, "_03_ALT.pdf")
+			if quarta:
+				quartapdf = fitz.Document(stream=quarta,filetype="pdf")
+				pdf.insert_pdf(quartapdf)
+				toc.append([1, "Quarta di copertina", len(pdf)])
+				labels.extend(["Copertina"] * len(quartapdf))
+				break
 
 	progress(98, "Applying toc/labels")
 	if labels:
