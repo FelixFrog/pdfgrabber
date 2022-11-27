@@ -16,7 +16,7 @@ tokentable = db.table("tokens")
 booktable = db.table("books")
 
 services = {"bsm": "bSmart", "ees": "easyeschool", "hbs": "Mondadori HUB Scuola", "mcm": "MEE2", "myl": "MyLim", "prn": "Pearson eText / Reader+", "sbk": "Scuolabook", "znc": "Zanichelli Booktab / Kitaboo", "dbk": "Laterza diBooK", "olb": "Oxford Learner’s Bookshelf"}
-oneshots = {"ktb": "Kitaboo"}
+oneshots = {"ktb": "Kitaboo", "gnt": "mydBook Giunti TVP"}
 
 def getservice(name, oneshot=False):
 	if oneshot:

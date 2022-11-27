@@ -307,11 +307,13 @@ def downloadbook(token, bookid, data, progress):
 			if indice:
 				indicepdf = fitz.Document(stream=indice, filetype="pdf")
 				pdf.insert_pdf(indicepdf)
-				toc.append([1, "Indice dei contenuti", 1])
+				indexname = config.get(service, "IndexName", fallback="Indice")
+				toc.append([1, indexname, 1])
 				labels.extend(["Indice"] * len(pdf))
 				break
 		else:
 			skipfirst = False
+			print("Skipping first, pdf has already " + str(len(pdf)) + " pagine!")
 
 	if data["format"] == "booktab":
 		if data["version"] in ["1.0", "2.0"]:
@@ -328,8 +330,9 @@ def downloadbook(token, bookid, data, progress):
 			if quarta:
 				quartapdf = fitz.Document(stream=quarta,filetype="pdf")
 				pdf.insert_pdf(quartapdf)
-				toc.append([1, "Quarta di copertina", len(pdf)])
-				labels.extend(["Copertina"] * len(quartapdf))
+				backcovername = config.get(service, "BackcoverName", fallback="Copertina")
+				toc.append([1, backcovername, len(pdf)])
+				labels.extend(["C" + str(i + 3) for i in range(len(quartapdf))])
 				break
 
 	progress(98, "Applying toc/labels")

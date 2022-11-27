@@ -5,7 +5,7 @@ import time
 import xml.etree.ElementTree as et
 
 service = "ktb"
-urlmatch = r"http[s]{,1}://my\.zanichelli\.it/kitaboo/[0-9a-f]{32}[/]{,1}"
+urlmatch = r"https?://my\.zanichelli\.it/kitaboo/[0-9a-f]{32}/?"
 
 clientid = b64encode("ZanichelliAdapter".encode())
 
@@ -52,8 +52,8 @@ def downloadbook(url, progress):
 
 	basepath = baseurl + "/" + "/".join(contentspath.split("/")[:-1]) + "/"
 
-	for i , page in enumerate(pages):
-		progress(i * 100/len(pages), f"Rendering page {i}/{len(pages)}")
+	for i, page in enumerate(pages):
+		progress(i * 100/len(pages), f"Rendering page {i + 1}/{len(pages)}")
 		svg = fitz.open(stream=s.get(basepath + page).text.replace("data:image/jpg;base64", "data:image/jpeg;base64").encode(), filetype="svg")
 		pdf.insert_pdf(fitz.open(stream=svg.convert_to_pdf()))
 

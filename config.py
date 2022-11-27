@@ -9,6 +9,6 @@ def getconfig():
 	config = configparser.ConfigParser()
 	conffile = Path("config.ini")
 	if not conffile.is_file():
-		shutil.copyfile(Path("config.ini.default"), conffile)
+		shutil.copyfile(Path("config-default.ini"), conffile)
 	config.read_file(open(conffile))
 	return config
