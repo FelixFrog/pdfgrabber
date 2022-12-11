@@ -24,10 +24,10 @@ Apps that I am aware of but I can't work with beacuse I don't have books:
 
 ## TODO
  - Add anonymous user
- - Add ability to pass options to scripts
- - Add page labels and perfect token checks
+ - ~~Add ability to pass options to scripts~~
+ - Add ~~page labels~~ and "perfect" token checks
  - General code quality improvement (better management of exceptions)
- - Use pathlib for better windows compatibility
+ - ~~Use pathlib for better windows compatibility~~
 
 # Installation
 You need python 3.10+. To install all the requirements run ```python3 -m pip install -r requirements.txt```. Also the script has been tested only on mac os, open an issue/pull request if you have tried it on linux/windows or you have problems.
@@ -35,7 +35,7 @@ You need python 3.10+. To install all the requirements run ```python3 -m pip ins
 ## Kitaboo/Reader+ books
 For kitaboo and RPLUS_EPUB books the script uses playwright (chromium automation) to render the html pages. You might want to issue ```playwright install chromium``` to download chroium. No forther setup is needed.
 ## Scuolabook
-Scuolabook has a very strict login system, where you can have only 2 devices loggen in and you only have 2 deletions per year. This means that you can only log in 4 times every year, with no way of downloading books (at least, the pdf version) if you have hit this limit. pdfgrabber should save the token for you, but you should also keep it somewhere safer such as a text document. 
+Scuolabook has a very strict login system, where you can have only 2 devices logged in and you only have 2 deletions per year. This means that you can only log in 4 times every year, with no way of downloading books (at least, the pdf version) if you have hit this limit. pdfgrabber should save the token for you, but you should also keep it somewhere safer such as a text document. 
 ## Pearson
 Pearon has a terrible double-service combo, eText and Reader+. Their login system is a gigantic mess, so the tokens expire very quickly (the ability to refresh them still needs to be implemented). This isn't too big of a problem in practice, since the you have unlimited logins. If your login fails even though you are sure your username and password are right, then it means that you need to accept the terms & privacy policy for one of the two services. Just download the Reader+ app and log in once. It will ask to accept the terms & conditions. 
 If the download of an eText book gets stuck in loop where it infinitely tries to download, then that is a problem with too strict caching policies from pearson's servers. It is problematic even for the official app, where it just spits out an error. Just try again later ;-)
