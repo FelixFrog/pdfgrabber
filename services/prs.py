@@ -21,6 +21,8 @@ import fitz
 import lib
 import re
 
+service = "prs"
+
 # It probabily is such a happy time to maintain this pearson's legacy codebase
 clientid = "cGnFEyiajGgv2EhcShCPBa7jqwSFpSG5"
 hawkkeyid = "GPgRTj6fOI"
