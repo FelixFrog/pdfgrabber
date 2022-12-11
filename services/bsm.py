@@ -111,7 +111,7 @@ def downloadbook(token, bookid, data, progress):
 	progress(95, "Obtaining toc")
 	index = getbookinfo(token, bookid, revision, "index")
 
-	bookmarks = {i["first_page"]["id"]:i["title"] for i in index}
+	bookmarks = {i["first_page"]["id"]:i["title"] for i in index if "first_page" in i}
 	for i, (pageid, pagepdfraw) in enumerate(sorted(pagespdf.items())):
 		pagepdf = fitz.Document(stream=pagepdfraw, filetype="pdf")
 		pdf.insert_pdf(pagepdf)
