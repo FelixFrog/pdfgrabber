@@ -3,7 +3,7 @@ from Crypto.Cipher import Blowfish
 from Crypto.Util.Padding import unpad
 from Crypto.Random import get_random_bytes
 from base64 import b64decode, b64encode
-from itertools import cycle
+from itertools import cycle, zip_longest
 from zipfile import ZipFile
 from tempfile import TemporaryDirectory
 from io import BytesIO
@@ -108,8 +108,8 @@ def downloadbooktab3(token, isbn, pdf, toc, labels, progress, encryption, skipfi
 	progress(5, "Downloading info")
 	volumeinfo, tocelems = getbookfiles(token, isbn, encryption)
 
-	#units = sorted([i for i in volumeinfo.find("volume").find("units").findall("unit") if i.find("resources")], key=lambda unit: unit.find("unitorder").text)
-	units = [i for i in volumeinfo.find("volume").find("units").findall("unit") if i.find("resources")]
+	units = sorted([i for i in volumeinfo.find("volume").find("units").findall("unit") if i.find("resources")], key=lambda unit: unit.find("unitorder").text)
+	#units = [i for i in volumeinfo.find("volume").find("units").findall("unit") if i.find("resources")]
 
 	unitwidth = (95 - 5) / len(units)
 	for i, unit in enumerate(units):
@@ -144,19 +144,25 @@ def downloadbooktab3(token, isbn, pdf, toc, labels, progress, encryption, skipfi
 		pdf.insert_pdf(unitpdf)
 
 		start = int(config.find("pages").text.split("-")[0])
-		for j, page in enumerate(config.find("links").findall("page")):
-			if label := page.get("id"):
-				newlabels.append(label)
-			else:
-				newlabels.append(str(j + start))
+		labels = [page.get("id") for page in config.find("links").findall("page")]
+		for j, plabel in zip_longest(range(len(unitpdf)), labels):
+			if isinstance(j, int):
+				if plabel:
+					newlabels.append(plabel)
+				else:
+					newlabels.append(str(j + start))
 
 	return pdf, newtoc, newlabels
 
-def downloadbooktab_legacy(token, isbn, pdf, toc, progress, version, skipfirst):
-	newtoc = []
+def downloadbooktab_legacy(token, isbn, pdf, toc, labels, progress, version, skipfirst):
+	newlabels = labels.copy()
+	newtoc = toc.copy()
 
 	progress(5, "Downloading info")
 	volumeinfo, spine = getbookfiles(token, isbn)
+
+	manifest = getmanifest(token, isbn)
+	resources = [i["path"] for i in manifest["resources"]]
 
 	units = [item for volumes in volumeinfo.find("volumes").findall("volume") for item in volumes.find("units").findall("unit")]
 
@@ -166,15 +172,37 @@ def downloadbooktab_legacy(token, isbn, pdf, toc, progress, version, skipfirst):
 	for i, unit in enumerate(units):
 		if skipfirst and i == 0:
 			continue
+		if unit.get("href") not in resources:
+			continue
 		if not (unitid := unit.get("id")):
 			unitid = unit.get("href").removesuffix(".zip")
 		progress(5 + unitwidth * i, f"Downloading unit {i + 1}/{len(units)}")
-		unitzip = ZipFile(BytesIO(downloadresource(token, isbn, unit.get("href"), progress, unitwidth, 5 + unitwidth * i)))
+		resbytes = downloadresource(token, isbn, unit.get("href"), progress, unitwidth, 5 + unitwidth * i)
+
+		unitzip = ZipFile(BytesIO(resbytes))
 		config = et.fromstring(unitzip.read(f"{unitid}/config.xml").decode())
 
-		pdfpath = unitid + "/" + config.find("content").text + ".pdf"
+		content = config.find("content").text
+		if content.endswith(".swf"):
+			continue
+		if not content.endswith(".pdf"):
+			content += ".pdf"
+		pdfpath = unitid + "/" + content
+		if pdfpath not in unitzip.namelist():
+			continue
 		prevlen = len(pdf) + 1
-		pdf.insert_pdf(fitz.Document(stream=unitzip.read(pdfpath), filetype="pdf"))
+		unitpdf = fitz.Document(stream=unitzip.read(pdfpath), filetype="pdf")
+
+		start = int(config.find("pages").text.split("-")[0])
+		labels = [page.get("id") for page in config.find("links").findall("page")]
+		for j, plabel in zip_longest(range(len(unitpdf)), labels):
+			if isinstance(j, int):
+				if plabel:
+					newlabels.append(plabel)
+				else:
+					newlabels.append(str(j + start))
+
+		pdf.insert_pdf(unitpdf)
 
 		newtoc.append([1, unit.find("unittitle").text, prevlen])
 
@@ -182,7 +210,7 @@ def downloadbooktab_legacy(token, isbn, pdf, toc, progress, version, skipfirst):
 		if spine:
 			print("Wow! You found a legacy book with a spine! Amazing! Contact the developer immediatly!")
 
-	return pdf, newtoc
+	return pdf, newtoc, newlabels
 
 def getbookfiles(token, isbn, encryption=False):
 	tocelems = []
@@ -290,7 +318,8 @@ def library(token):
 		books[str(isbn)] = {"title": bookmetadata["title"], "format": i["format"], "cover": bookmetadata["cover"], "relatedisbns": i["relatedIsbns"], "version": i["version"]}
 		if "encryptionType" in i:
 			books[str(isbn)]["encryption"] = i["encryptionType"]
-
+		if config.getboolean(service, "ShowFormat", fallback=False):
+			books[str(isbn)]["title"] = i["format"] + " " + i["version"] + " - " + bookmetadata["title"]
 	return books
 
 def downloadbook(token, bookid, data, progress):
@@ -313,11 +342,10 @@ def downloadbook(token, bookid, data, progress):
 				break
 		else:
 			skipfirst = False
-			print("Skipping first, pdf has already " + str(len(pdf)) + " pagine!")
 
 	if data["format"] == "booktab":
 		if data["version"] in ["1.0", "2.0"]:
-			pdf, toc = downloadbooktab_legacy(token, bookid, pdf, toc, progress, data["version"], skipfirst)
+			pdf, toc, labels = downloadbooktab_legacy(token, bookid, pdf, toc, labels, progress, data["version"], skipfirst)
 		else:
 			pdf, toc, labels = downloadbooktab3(token, bookid, pdf, toc, labels, progress, data["encryption"], skipfirst)
 	else:

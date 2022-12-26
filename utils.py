@@ -136,4 +136,4 @@ def delete(userid):
 	usertable.remove(doc_id=userid)
 
 def addtoken(userid, servicename, token):
-	tokentable.upsert({"owner": userid, "service": servicename, "value": token}, (Query().owner == userid) and (Query().service == servicename))
+	tokentable.upsert({"owner": userid, "service": servicename, "value": token}, (Query().owner == userid) & (Query().service == servicename))
