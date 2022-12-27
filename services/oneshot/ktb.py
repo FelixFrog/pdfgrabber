@@ -133,9 +133,10 @@ def downloadbook(url, progress):
 
 					fullpath = tmpdir / "OPS" / pagefile
 					sizematch = re.search(r'content\s?=\s?\"([\d\.]+?):([\d\.]+?):([\d\.]+?):([\d\.]+?)\"', open(fullpath, encoding="utf-8").read())
-					width, height = str(float(sizematch.group(3)) - float(sizematch.group(1))), float(sizematch.group(4)) - float(sizematch.group(2))
+					if sizematch != None:
+						width, height = str(float(sizematch.group(3)) - float(sizematch.group(1))), float(sizematch.group(4)) - float(sizematch.group(2))
 					#sizematch = re.search('content.+?width\s{,1}=\s{,1}([0-9]+).+?height\s{,1}=\s{,1}([0-9]+)', open(fullpath, encoding="utf-8").read())
-					print(sizematch.group(0), width, height)
+					#print(sizematch.group(0), width, height)
 
 					bpage.goto(fullpath.as_uri())
 					progress(round(unitstart + unitwidth / 4 + pagewidth * j), f"Rendering page {j + 1}/{len(pages)}")
