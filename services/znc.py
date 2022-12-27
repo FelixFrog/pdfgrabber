@@ -106,7 +106,8 @@ def downloadbooktab3(token, isbn, pdf, toc, labels, progress, encryption, skipfi
 	newlabels = labels.copy()
 
 	progress(5, "Downloading info")
-	volumeinfo, tocelems = getbookfiles(token, isbn, encryption)
+	volumeinfo, tocelems, manifest = getbookfiles(token, isbn, encryption)
+	resources = [i["path"] for i in manifest["resources"]]
 
 	units = sorted([i for i in volumeinfo.find("volume").find("units").findall("unit") if i.find("resources")], key=lambda unit: unit.find("unitorder").text)
 	#units = [i for i in volumeinfo.find("volume").find("units").findall("unit") if i.find("resources")]
@@ -119,6 +120,8 @@ def downloadbooktab3(token, isbn, pdf, toc, labels, progress, encryption, skipfi
 		basepath = next(j for j in unit.find("resources").findall("resource") if j.get("type") == "base")
 		basepath = next(j.text for j in basepath.findall("download") if j.get("device") == "desktop")
 
+		if btbid + "/" + basepath not in resources:
+			continue
 		progress(5 + i * unitwidth, f"Downloading unit {i + 1}/{len(units)}")
 		unitbase = ZipFile(BytesIO(downloadresource(token, isbn, btbid + "/" + basepath, progress, unitwidth, 5 + i * unitwidth)))
 		config = unitbase.read(btbid + "/config.xml")
@@ -135,7 +138,9 @@ def downloadbooktab3(token, isbn, pdf, toc, labels, progress, encryption, skipfi
 		else:
 			newtoc.append([1, unit.find("displaytitle").text, len(pdf) + 1])
 
-		pdfpath = config.find("content").text + ".pdf"
+		pdfpath = config.find("content").text
+		if not pdfpath.endswith(".pdf"):
+			pdfpath += ".pdf"
 		fakepath = next(j.text for j in config.find("filesMap").findall("entry") if j.get("key") == pdfpath)
 		unitpdf = unitbase.read(btbid + "/" + fakepath)
 		if encryption:
@@ -159,9 +164,7 @@ def downloadbooktab_legacy(token, isbn, pdf, toc, labels, progress, version, ski
 	newtoc = toc.copy()
 
 	progress(5, "Downloading info")
-	volumeinfo, spine = getbookfiles(token, isbn)
-
-	manifest = getmanifest(token, isbn)
+	volumeinfo, spine, manifest = getbookfiles(token, isbn)
 	resources = [i["path"] for i in manifest["resources"]]
 
 	units = [item for volumes in volumeinfo.find("volumes").findall("volume") for item in volumes.find("units").findall("unit")]
@@ -224,7 +227,10 @@ def getbookfiles(token, isbn, encryption=False):
 	if spine:
 		spine = et.fromstring(spine.decode())
 		tocelems = {i.get("id"): i for i in spine.findall("unit")}
-	return volumeinfo, tocelems
+
+	manifest = getmanifest(token, isbn)
+
+	return volumeinfo, tocelems, manifest
 
 def downloadkitaboo(token, isbn, pdf, toc, labels, progress, skipfirst):
 	newtoc = toc.copy()
