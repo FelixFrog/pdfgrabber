@@ -39,7 +39,7 @@ def downloadzip(url, progress=False, total=0, done=0):
 		return zipfile.ZipFile(BytesIO(r.content), "r")
 
 def cover(token, bookid, data):
-	return b"not real cover heheheh.txt"
+	return b""
 
 def checktoken(token):
 	r = requests.get("https://mee2.macmillan.education/LMS/downloaderPlus.php", params={"IDSESSIONDIRECT": token, "op": "getdiff", "last_update": 0, "synchromode": 1})

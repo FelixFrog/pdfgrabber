@@ -3,7 +3,7 @@ This vendor-agnostic script is used to download pdfs (and covers) from different
 # State of features
 Every downloader has different features that might also be implemented in the future. As of now, there is a way to download best-quality pdf from every one of them, with varying degree of quality, speed and discretion. Here's a table riassuming all the features.
 
-| service | pdf download | table of contents | pdf size | max logins | page labels | login expire | cover | redered |
+| service | pdf download | table of contents | pdf size | max logins | page labels | login expire | cover | rendered |
 | ------- | :----------: | :---------------: | :------: | :--------: | :---------: | :----------: | :---: | :-----: |
 | Scuolabook | perfect | yes (very small) | excellent | very restrictive | yes | never | yes | no |
 | MyLim | perfect | excellent | excellent | no | not yet/depends on vendor | ? | yes | no |
@@ -17,9 +17,10 @@ Every downloader has different features that might also be implemented in the fu
 | Zanichelli Kitaboo | yes | yes | average/big | yes | yes | ? | yes | yes |
 | Oxford Learner’s Bookshelf | yes | yes (small) | very big | ? | not yet/no | ? | yes | no |
 | Laterza diBooK | yes | yes/(depends on vendor) | excellent | ? | not yet/no | ? | yes | no |
+| Raffaello Player | yes | yes (incomplete bc no samples :-( | very big | ? | yes | ? | yes | no |
 
 Apps that I am aware of but I can't work with beacuse I don't have books:
- - Raffaello player
+ - ~~Raffaello player~~ Done
  - Appbook (might be a shitty html webview like booktab)
 
 ## TODO
