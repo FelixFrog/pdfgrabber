@@ -121,6 +121,12 @@ def guessmagic(file):
 		if b"/Catalog" in contents:
 			return int(objnum) ^ refnum
 
+def getoutline(item, level):
+	toc = [[level, item.find("title").text, int(item.find("page").text)]]
+	for subitem in item.findall("section"):
+		toc.extend(getoutline(subitem, level + 1))
+	return toc
+
 def downloadbook(token, bookid, data, progress):
 	sessionid, username = token.split("/")
 
@@ -182,13 +188,13 @@ def downloadbook(token, bookid, data, progress):
 	pdf = fitz.Document(stream=file, filetype="pdf")
 
 	progress(98, "Applying toc/labels")
-	if spine.find("sections"):
+	if tocelem := spine.find("sections"):
 		toc = []
-		for section in spine.find("sections").findall("section"):
-			toc.append([1, section.find("title").text, int(section.find("page").text)])
-		pdf.set_toc(toc)
+		for i in tocelem.findall("section"):
+			toc.extend(getoutline(i, 1))
+		pdf.set_toc([i for i in toc if i[2] <= len(pdf)])
 	if spine.find("labels"):
-		labels = [i.find("page_label").text for i in spine.find("labels").findall("label")]
+		labels = [v.find("page_label").text for i, v in enumerate(spine.find("labels").findall("label")) if i <= len(pdf)]
 		pdf.set_page_labels(lib.generatelabelsrule(labels))
 
 	return pdf
