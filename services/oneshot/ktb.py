@@ -53,13 +53,15 @@ def downloadbook(url, progress):
 	if "usertoken" not in location or "bookID" not in location:
 		return
 
-	params = {i.split("=")[0]: i.split("=")[1] for i in location.split("?")[-1].split("&")}
+	usertoken0 = re.search(r"(?<=\?|&)usertoken=([A-Za-z0-9+/=]+)(?=&|$)", location).group(1)
+	bookid0 = re.search(r"(?<=\?|&)bookID=([0-9]+)(?=&|$)", location).group(1)
+
 	progress(1, "Vaidating token")
-	tokenvalidation = requests.get("https://zanichelliservices.kitaboo.eu/DistributionServices/services/api/reader/user/123/pc/validateUserToken", params={"usertoken": params["usertoken"]}).json()
+	tokenvalidation = requests.get("https://zanichelliservices.kitaboo.eu/DistributionServices/services/api/reader/user/123/pc/validateUserToken", params={"usertoken": usertoken0}).json()
 	usertoken = tokenvalidation["userToken"]
 
 	progress(2, "Getting info")
-	bookdetails = requests.get("https://zanichelliservices.kitaboo.eu/DistributionServices/services/api/reader/distribution/123/pc/book/details", params={"bookID": params["bookID"]}, headers={"usertoken": usertoken}).json()
+	bookdetails = requests.get("https://zanichelliservices.kitaboo.eu/DistributionServices/services/api/reader/distribution/123/pc/book/details", params={"bookID": bookid0}, headers={"usertoken": usertoken}).json()
 	# TODO: choose a better selection method
 	book = bookdetails["bookList"][0]
 	if book["encryption"]:
