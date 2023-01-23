@@ -53,7 +53,7 @@ def getrplususerinfo(rplustoken):
 	return r.json()
 
 def getbookshelf(etexttoken, rplustoken, rplususerid):
-	r = requests.get("https://marin-api.prd-prsn.com/api/1.0/rplus/bookshelf", headers={"Authorization": f"Bearer {etexttoken}", "X-Tenant-Id": tenantid, "X-Tenant-Key": tenantkey, "X-Tenant-Region": "IRE", "X-GAB-Authorization": rplustoken, "X-GAB-UserId": rplususerid})
+	r = requests.get("https://etext-ise.pearson.com/marin/api/1.0/rplus/bookshelf", headers={"Authorization": f"Bearer {etexttoken}", "X-Tenant-Id": tenantid, "X-Tenant-Key": tenantkey, "X-Tenant-Region": "IRE", "X-GAB-Authorization": rplustoken, "X-GAB-UserId": rplususerid})
 	return r.json()
 
 def getcdntoken(etexttoken, bookid):
