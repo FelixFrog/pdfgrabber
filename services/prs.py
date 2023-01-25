@@ -36,6 +36,10 @@ def getetexttoken(username, password):
 	r = requests.post("https://login.pearson.com/v1/piapi/login/webcredentials", data={"password": password, "isMobile": "true", "grant_type": "password", "client_id": clientid, "username": username}, headers={"User-Agent": "mobile_app"})
 	return r.json()
 
+def resolveescrow(escrowticket):
+	r = requests.post("https://login.pearson.com/v1/piapi/login/webacceptconsent", data={"escrowTicket": escrowticket, "client_id": clientid})
+	return r.json()
+
 def refreshetexttoken(refreshtoken):
 	r = requests.post("https://login.pearson.com/v1/piapi/login/webcredentials", data={"refresh": "true", "client_id": clientid, "isMobile": "true"}, cookies={"PiAuthSession": refreshtoken})
 	return r.json()
@@ -171,7 +175,10 @@ def checktoken(token):
 def login(username, password):
 	logindata = getetexttoken(username, password)
 	if "data" not in logindata:
-		return
+		if len(logindata["message"]) == 10:
+			logindata = resolveescrow([logindata["message"]])
+		else:
+			return
 	etexttoken, etextuserid = logindata["data"]["access_token"], logindata["data"]["userId"]
 	etextuserinfo = getetextuserinfo(etextuserid, etexttoken)
 	if "id" not in etextuserinfo:
