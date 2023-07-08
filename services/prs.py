@@ -306,12 +306,13 @@ def downloadrplusepub(url, password, progress):
 				else:
 					labels.append(str(j + 1))
 
-				sizematch = re.search('content.+?width\s{,1}=\s{,1}([0-9]+).+?height\s{,1}=\s{,1}([0-9]+)', open(fullpath).read())
+				sizematch = re.search('content.+?width\s?=\s?([0-9]+).+?height\s?=\s?([0-9]+)', open(fullpath).read())
 
 				page.goto(fullpath.as_uri())
 				advancement = (j + 1) / len(pages) * 62 + 36
 				progress(advancement, f"Printing {j + 1}/{len(pages)}")
-				pdfpagebytes = page.pdf(print_background=True, width=sizematch.group(1) + "px", height=sizematch.group(2) + "px", page_ranges="1")
+				width, height = str(int(sizematch.group(1)) / 144) + "in", str(int(sizematch.group(2)) / 144) + "in"
+				pdfpagebytes = page.pdf(print_background=True, width=width, height=height, page_ranges="1")
 				pagepdf = fitz.Document(stream=pdfpagebytes, filetype="pdf")
 				pdf.insert_pdf(pagepdf)
 			browser.close()

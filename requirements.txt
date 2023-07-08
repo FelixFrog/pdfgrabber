@@ -2,6 +2,6 @@ pymupdf
 rich
 requests
 pycryptodome
-umsgpack
+u-msgpack-python
 tinydb
 playwright

@@ -1,3 +1,14 @@
+'''
+DISCLAIMER: This file is outdated. The kitaboo webreader has been updated to version 6.0.
+This means that this script is completely obsolete, and has become so in a matter of weeks
+For this reason it won't be updated anymore. I can't keep up with the webreader updates.
+Please, if you need zanichelli books log in with your credentials in the znc script.
+It produces much better output and will be supported in the future.
+
+This file will be left here as a cautinary tale for future developers.
+'''
+
+'''
 import requests
 from Crypto.Cipher import Blowfish
 from Crypto.Util.Padding import unpad
@@ -157,3 +168,4 @@ def downloadbook(url, progress):
 	pdf.set_toc(toc)
 
 	return pdf, isbn, title
+'''

@@ -148,14 +148,17 @@ def downloadbooktab3(token, isbn, pdf, toc, labels, progress, encryption, skipfi
 		unitpdf = fitz.Document(stream=unitpdf, filetype="pdf")
 		pdf.insert_pdf(unitpdf)
 
-		start = int(config.find("pages").text.split("-")[0])
 		labels = [page.get("id") for page in config.find("links").findall("page")]
 		for j, plabel in zip_longest(range(len(unitpdf)), labels):
 			if isinstance(j, int):
 				if plabel:
 					newlabels.append(plabel)
 				else:
-					newlabels.append(str(j + start))
+					start = config.find("pages").text.split("-")[0]
+					if start.isdigit():
+						newlabels.append(str(j + int(start)))
+					else:
+						newlabels.append(len(pdf) - len(unitpdf) + j)
 
 	return pdf, newtoc, newlabels
 
@@ -290,14 +293,19 @@ def downloadkitaboo(token, isbn, pdf, toc, labels, progress, skipfirst):
 					appended.append(pagefile)
 
 					fullpath = tmpdir / "OPS" / pagefile
-					sizematch = re.search('content.+?width\s{,1}=\s{,1}([0-9]+).+?height\s{,1}=\s{,1}([0-9]+)', open(fullpath, encoding="utf-8").read())
+					sizematch = re.search('content.+?width\s?=\s?([0-9]+).+?height\s?=\s?([0-9]+)', open(fullpath, encoding="utf-8").read())
 
 					bpage.goto(fullpath.as_uri())
 					progress(round(unitstart + unitwidth / 4 + pagewidth * j), f"Rendering page {j + 1}/{len(pages)}")
-					pdfpagebytes = bpage.pdf(print_background=True, width=sizematch.group(1) + "px", height=sizematch.group(2) + "px", page_ranges="1")
+
+					# Sometimes during spring 2023 someone changed the default chrome dev tools pdf print command to default to 144 dpi.
+					# Playwright (and Selenium as well) still haven't updated this from the previous default of 96 dpi.
+					width, height = str(int(sizematch.group(1)) / 144) + "in", str(int(sizematch.group(2)) / 144) + "in"
+					pdfpagebytes = bpage.pdf(print_background=True, width=width, height=height, page_ranges="1")
 					pagepdf = fitz.Document(stream=pdfpagebytes, filetype="pdf")
 					pdf.insert_pdf(pagepdf)
 			browser.close()
+		input(f"{tmpdir}")
 
 	tocobj = et.fromstring(baseresource.read("OPS/toc.xml").decode())
 	for i in tocobj.find("toc").findall("node"):
