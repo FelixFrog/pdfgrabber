@@ -305,7 +305,7 @@ def downloadkitaboo(token, isbn, pdf, toc, labels, progress, skipfirst):
 					pagepdf = fitz.Document(stream=pdfpagebytes, filetype="pdf")
 					pdf.insert_pdf(pagepdf)
 			browser.close()
-		input(f"{tmpdir}")
+		# input(f"{tmpdir}")
 
 	tocobj = et.fromstring(baseresource.read("OPS/toc.xml").decode())
 	for i in tocobj.find("toc").findall("node"):
