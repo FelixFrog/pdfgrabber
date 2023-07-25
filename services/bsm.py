@@ -44,7 +44,7 @@ def cover(token, bookid, data):
 	return r.content
 
 def decryptfile(file):
-	header = msgpack.unpackb(file.read(256).rstrip(b"\x00"))
+	header = umsgpack.unpackb(file.read(256).rstrip(b"\x00"))
 
 	iv = file.read(16)
 	obj = AES.new(key, AES.MODE_CBC, iv)
