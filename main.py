@@ -32,7 +32,7 @@ def login():
 	console.print("Logged in!", style="green")
 
 def selectservice(services):
-	table = Table(title="Avaliable services")
+	table = Table(title="Available services")
 	table.add_column("Code", style="cyan")
 	table.add_column("Name", style="green")
 
@@ -104,7 +104,7 @@ def downloadbook():
 		console.print("No books!", style="bold red")
 		return
 
-	table = Table(title=f"Avaliable books for {servicename}")
+	table = Table(title=f"Available books for {servicename}")
 	table.add_column("Id", style="cyan")
 	table.add_column("Internal id", style="magenta")
 	table.add_column("Title", style="green")
@@ -191,14 +191,14 @@ def logout():
 	console.print("Logged out!", style="bold magenta")
 
 def books():
-	avaliable = utils.listbooks()
+	available = utils.listbooks()
 	table = Table(title="Books")
 	table.add_column("Service", style="cyan")
 	table.add_column("Title", style="green")
 	table.add_column("Pages", style="magenta")
 	table.add_column("Path", style="blue")
 
-	for i in avaliable:
+	for i in available:
 		table.add_row(i["service"], i["title"], str(i["pages"]), i["path"])
 
 	console.print(table)

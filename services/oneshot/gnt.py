@@ -28,7 +28,7 @@ def downloadbook(url, progress):
 	inputmatch = re.fullmatch(urlmatch, url)
 	if inputmatch.group(1) == "collections":
 		volumes = resolvepack(inputmatch.group(2))
-		print("Books avaliable:")
+		print("Books available:")
 		for i in volumes:
 			print(" - " + i + ": " + volumetree[i])
 		selected = input("Choose a book: ")

@@ -48,9 +48,9 @@ def decryptfile(file):
 
 	iv = file.read(16)
 	obj = AES.new(key, AES.MODE_CBC, iv)
-	dec = obj.decrypt(file.read(header[b"start"] - 256 - 16))
+	dec = obj.decrypt(file.read(header["start"] - 256 - 16))
 
-	return unpad(dec, AES.block_size) + file.read(), header[b"md5"].decode()
+	return unpad(dec, AES.block_size) + file.read(), header["md5"]
 
 def login(username, password):
 	logindata = getlogindata(username, password)
