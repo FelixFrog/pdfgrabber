@@ -31,7 +31,27 @@ Apps that I am aware of but I can't work with beacuse I don't have books:
  - ~~Use pathlib for better windows compatibility~~
 
 # Installation
-You need python 3.10+. To install all the requirements run ```python3 -m pip install -r requirements.txt```. Also the script has been tested only on mac os, open an issue/pull request if you have tried it on linux/windows or you have problems.
+### How to use pdfgrabber
+1. download the latest version of [Python](https://www.python.org/downloads/)
+    - when installing though the set up wizard, make sure to select the checkbox to add python to `PATH`
+    ![img](https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Flinuxhint.com%2Fwp-content%2Fuploads%2F2022%2F09%2FHow-to-Add-Python-to-Windows-Path-3.png&f=1&nofb=1&ipt=6324f391e317600b0eaa0586b2846e63bcb997e909d93f61ea46fdeb32019fd5&ipo=images)
+2. downlaod the pdfgrabber repo
+    - using git: `git clone https://github.com/FelixFrog/pdfgrabber.git`
+    - manually: download the zip (green button labeled "code") and extract it
+3. open your local clone of pdfgrabber
+4. open the terminal in that directory and run:
+    1) `pip install -r requirements.txt` (takes care of installing every needed libraries)
+    2) run the script
+        - `python3 main.py` (linux and macos) 
+        - `py main.py` (windows)
+5. once inside the pdfgrabber CLI:
+    - press `r`: register a new account
+    - choose what to do (it's listed):
+       - to download a book: press `d` and follow the instructions
+
+From here the pdfgrabber cli guides you well 
+
+> the script has been tested only on mac os, open an issue/pull request if you have tried it on linux/windows or you have problems.
 # Quirks
 ## Kitaboo/Reader+ books
 For kitaboo and RPLUS_EPUB books the script uses playwright (chromium automation) to render the html pages. You might want to issue ```playwright install chromium``` to download chroium. No forther setup is needed.
