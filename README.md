@@ -31,7 +31,7 @@ Apps that I am aware of but I can't work with beacuse I don't have books:
  - ~~Use pathlib for better windows compatibility~~
 
 # Installation
-### How to use pdfgrabber
+## Windows
 1. download the latest version of [Python](https://www.python.org/downloads/)
     - when installing though the set up wizard, make sure to select the checkbox to add python to `PATH`
     ![img](https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Flinuxhint.com%2Fwp-content%2Fuploads%2F2022%2F09%2FHow-to-Add-Python-to-Windows-Path-3.png&f=1&nofb=1&ipt=6324f391e317600b0eaa0586b2846e63bcb997e909d93f61ea46fdeb32019fd5&ipo=images)
