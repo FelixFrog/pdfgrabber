@@ -66,13 +66,15 @@ def checktoken(token):
 def library(token):
 	books = dict()
 	for i in getlibrary(token):
+		if i["liquid_text"]:
+			continue
 		books[str(i["id"])] = {"title": i["title"], "revision": i["current_edition"]["revision"], "cover": i["cover"]}
 
 	if config.getboolean(service, "Preactivations", fallback=True):
 		for i in getpreactivations(token):
-			if not i["activated"]:
-				continue
 			for book in i["books"]:
+				if book["liquid_text"]:
+					continue
 				books[str(book["id"])] = {"title": book["title"], "revision": book["current_edition"]["revision"], "cover": book["cover"]}
 
 	return books
