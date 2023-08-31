@@ -55,5 +55,8 @@ Scuolabook has a very strict login system, where you can have only 2 devices log
 ## Pearson
 If the download of an eText book gets stuck in loop where it infinitely tries to download, then that is a problem with too strict caching policies from pearson's servers. It is problematic even for the official app, where it just spits out an error. Just try again later ;-)
 Both RPLUS_PDF and RPLUS_EPUB books are stored in a password protected zip file. Python's ZipFile module doesn't do the decryption natively, so it might take a (very) long time for some big books in the "Extracting zip" phase. If you have found a decent workaround let me know.
+# Support
+My [telegram](t.me/fflxx)
+
 # Disclaimer
 This script is provided "as is", without any type of warranty. I am not responsible of any harm or nuclear war that this may cause.
