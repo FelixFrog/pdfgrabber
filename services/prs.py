@@ -183,10 +183,15 @@ def login(username, password):
 	etextuserinfo = getetextuserinfo(etextuserid, etexttoken)
 	if "id" not in etextuserinfo:
 		return
-	rplustoken = getrplustoken(username, etextuserinfo["firstName"], etextuserinfo["lastName"])
-	rplususerinfo = getrplususerinfo(rplustoken["token"])
 
-	return "|".join([etexttoken, etextuserid, rplustoken["token"], rplususerinfo["id"], logindata["data"]["refresh_token"]])
+	rplustoken, rplususerid = "", ""
+	rplustokenreply = getrplustoken(username, etextuserinfo["firstName"], etextuserinfo["lastName"])
+	if "token" in rplustokenreply:
+		rplustoken = rplustokenreply["token"]
+		rplususerinfo = getrplususerinfo(rplustoken)
+		rplususerid = rplususerinfo["id"]
+
+	return "|".join([etexttoken, etextuserid, rplustoken, rplususerid, logindata["data"]["refresh_token"]])
 
 def library(token):
 	etexttoken, etextuserid, rplustoken, rplususerid, refreshtoken = tuple(token.split("|"))
