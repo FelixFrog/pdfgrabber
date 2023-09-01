@@ -15,9 +15,9 @@ def generatelabelsrule(labels):
 
 def estimatelabel(label):
 	# {"style": "D|r|R|a|A", "prefix": "", "firstpagenum": 0}
-	if re.fullmatch("[0-9]+", label):
+	if re.fullmatch("[0-9]+", label) and label != "0" and str(int(label)) == label:
 		return {"style": "D", "prefix": "", "firstpagenum": int(label)}
-	elif m := re.fullmatch("([^0-9]*?)([0-9]+)", label):
+	elif m := re.fullmatch("([^0-9]+?)([0-9]+)", label):
 		return {"style": "D", "prefix": m.group(1), "firstpagenum": int(m.group(2))}
 	elif (m := re.fullmatch("(?<=^)(M{0,}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})|m{0,}(cm|cd|d?c{0,3})(xc|xl|l?x{0,3})(ix|iv|v?i{0,3}))(?=$)", label)) and len(label) > 0:
 		return {"style": "R" if label.isupper() else "r", "prefix": "", "firstpagenum": destroyroman(m.group(0))}
