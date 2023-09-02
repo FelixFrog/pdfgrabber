@@ -50,6 +50,7 @@ Apps that I am aware of but I can't work with beacuse I don't have books:
        - to download a book: press `d` and follow the instructions.
        - the output file will be `files/<service>/<id>.pdf`
 
+# Quirks
 ## Scuolabook
 Scuolabook has a very strict login system, where you can have only 2 devices logged in and you only have 2 deletions per year. This means that you can only log in 4 times every year, with no way of downloading books (at least, the pdf version) if you have hit this limit. pdfgrabber should save the token for you, but you should also keep it somewhere safer such as a text document. 
 ## Pearson
