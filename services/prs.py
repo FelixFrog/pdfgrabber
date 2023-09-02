@@ -282,16 +282,16 @@ def downloadrplusepub(url, password, progress):
 
 		progress(31, "Extracting epub")
 		epubzip.extractall(tmpdir)
-		info = et.fromstring(open(tmpdir / "META-INF" / "container.xml").read())
+		info = et.fromstring(open(tmpdir / "META-INF" / "container.xml", "r", encoding="utf-8-sig").read())
 		contentspath = tmpdir / info.find("{urn:oasis:names:tc:opendocument:xmlns:container}rootfiles").find("{urn:oasis:names:tc:opendocument:xmlns:container}rootfile").get("full-path")
-		contents = et.fromstring(open(contentspath).read())
+		contents = et.fromstring(open(contentspath, "r", encoding="utf-8-sig").read())
 
 		files = {i.get("id"): i.attrib for i in contents.find("opf:manifest", ns).findall("opf:item", ns)}
 		spine = contents.find("opf:spine", ns)
 		pages = [(contentspath.parent / files[i.get("idref")]["href"]).resolve() for i in spine.findall("opf:itemref", ns)]
 		navpath = contentspath.parent / next(i["href"] for i in files.values() if i.get("properties") == "nav")
 		
-		tocfile = et.fromstring(open(navpath, "r").read())
+		tocfile = et.fromstring(open(navpath, "r", encoding="utf-8-sig").read())
 
 		tocitem = next(i for i in tocfile.find("xhtml:body", ns).findall("xhtml:nav", ns) if i.get("{http://www.idpf.org/2007/ops}type") == "toc")
 		toc.extend(gentoc(tocitem.find("xhtml:ol", ns), 1, pages, navpath.parent))
