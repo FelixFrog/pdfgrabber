@@ -31,6 +31,7 @@ Apps that I am aware of but I can't work with beacuse I don't have books:
  - ~~Add ability to pass options to scripts~~
  - Add "perfect" token checks
  - General code quality improvement (better management of exceptions)
+ - Make toc and labels generation raise non-critical warnings
 
 # Installation
 1. download the latest version of [Python](https://www.python.org/downloads/)
@@ -55,7 +56,6 @@ Apps that I am aware of but I can't work with beacuse I don't have books:
 ## Scuolabook
 Scuolabook has a very strict login system, where you can have only 2 devices logged in and you only have 2 deletions per year. This means that you can only log in 4 times every year, with no way of downloading books (at least, the pdf version) if you have hit this limit. pdfgrabber should save the token for you, but you should also keep it somewhere safer such as a text document. 
 ## Pearson
-If the download of an eText book gets stuck in loop where it infinitely tries to download, then that is a problem with too strict caching policies from pearson's servers. It is problematic even for the official app, where it just spits out an error. Just try again later ;-)
 Both RPLUS_PDF and RPLUS_EPUB books are stored in a password protected zip file. Python's ZipFile module doesn't do the decryption natively, so it might take a (very) long time for some big books in the "Extracting zip" phase. If you have found a decent workaround let me know.
 # Support
 My [telegram](https://t.me/fflxx)

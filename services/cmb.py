@@ -37,7 +37,7 @@ def getlibrary(accesstoken, userid):
 		return r.json()
 
 def downloadfile(url, progress, total, done):
-	r = requests.get(url, stream=True)
+	r = requests.get(url, stream=True, headers={"Referer": "https://elevate.cambridge.org/"})
 	length = int(r.headers.get("content-length", 1))
 	if r.status_code != 200:
 		return
@@ -58,7 +58,11 @@ def login(username, password):
 		else:
 			print("Login failed!")
 	else:
-		return logindata["accessToken"] + "/" + str(logindata["userId"])
+		userid = str(logindata["userId"])
+		if userid == "0":
+			print("Unauthorized!")
+		else:
+			return logindata["accessToken"] + "/" + userid
 
 def cover(token, bookid, data):
 	r = requests.get(data["cover"])
@@ -136,7 +140,7 @@ def downloadbook(token, bookid, data, progress):
 	def gentoc(item, level, pages, basedir):
 		toc = []
 		for li in item.findall("xhtml:li", ns):
-			ref = li.find("xhtml:}a", ns)
+			ref = li.find("xhtml:a", ns)
 			text, href = ref.text, ref.get("href")
 			if href.startswith("https://") or href.startswith("http://") or not href:
 				continue
@@ -181,7 +185,7 @@ def downloadbook(token, bookid, data, progress):
 				else:
 					labels.append(str(j + 1))
 
-				sizematch = re.search('content.+?width\s?=\s?([0-9]+).+?height\s?=\s?([0-9]+)', open(fullpath, encoding="utf-8-sig", "r").read())
+				sizematch = re.search('content.+?width\s?=\s?([0-9]+).+?height\s?=\s?([0-9]+)', open(fullpath, "r", encoding="utf-8-sig").read())
 
 				page.goto(fullpath.as_uri())
 				advancement = (j + 1) / len(pages) * 44 + 54
