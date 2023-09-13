@@ -17,6 +17,7 @@ This vendor-agnostic script is used to download pdfs (and covers) from different
 | Oxford Learner’s Bookshelf | yes | yes (small) | very big | ? | not yet/no | ? | yes | no |
 | Laterza diBooK | yes | yes/(depends on vendor) | excellent | ? | not yet/no | ? | yes | no |
 | Raffaello Player | yes | yes (incomplete bc no samples :-( | very big | ? | yes | ? | yes | no |
+| Cambridge GO | yes | yes | big | no | yes | yes | yes | yes |
 
 Apps that I am aware of but I can't work with beacuse I don't have books:
  - Appbook (might be a shitty html webview like booktab)
