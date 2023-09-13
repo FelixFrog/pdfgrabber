@@ -116,7 +116,7 @@ def decryptfile(file, key):
 
 	# It's not AES128 key=b64decoded string, it's AES192 key=24-byte string
 	obj = AES.new(key, AES.MODE_CBC, iv)
-	return obj.decrypt(file[16:])
+	return unpad(obj.decrypt(file[16:]), AES.block_size)
 
 def getoutlines(item, labels, level):
 	subtoc = []

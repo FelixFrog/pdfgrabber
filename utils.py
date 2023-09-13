@@ -15,7 +15,7 @@ usertable = db.table("users")
 tokentable = db.table("tokens")
 booktable = db.table("books")
 
-services = {"bsm": "bSmart", "ees": "easyeschool", "hbs": "Mondadori HUB Scuola", "mcm": "MEE2", "myl": "MyLim", "prs": "Pearson eText / Reader+", "sbk": "Scuolabook", "znc": "Zanichelli Booktab / Kitaboo", "dbk": "Laterza diBooK", "olb": "Oxford Learner’s Bookshelf", "rfl": "Raffaello Player"}
+services = {"bsm": "bSmart", "ees": "easyeschool", "hbs": "Mondadori HUB Scuola", "mcm": "MEE2", "myl": "MyLim", "prs": "Pearson eText / Reader+", "sbk": "Scuolabook", "znc": "Zanichelli Booktab / Kitaboo", "dbk": "Laterza diBooK", "olb": "Oxford Learner’s Bookshelf", "rfl": "Raffaello Player", "cmb": "Cambridge GO"}
 oneshots = {"gnt": "mydBook Giunti TVP"}
 
 def getservice(name, oneshot=False):
@@ -72,10 +72,13 @@ def downloadoneshot(servicename, url, progress):
 	metadata = {'producer': "PyMuPDF " + fitz.version[0], 'format': 'PDF 1.7', 'encryption': None, 'author': author, 'modDate': pdfnow, 'keywords': 'none', 'title': title, 'creationDate': pdfnow, 'creator': "pdfgrabber1.0", 'subject': 'none'}
 	pdf.set_metadata(metadata)
 	progress(99, "Saving pdf")
-	if config.getboolean(servicename, "Compress", fallback=False):
-		pdf.save(pdfpath, garbage=config.getint(servicename, "Garbage", fallback=3), clean=config.getboolean(servicename, "Clean", fallback=True), linear=config.getboolean(servicename, "Linearize", fallback=True))
+	if config.getboolean(servicename, "EzSave", fallback=True):
+		pdf.ez_save(pdfpath)
 	else:
-		pdf.save(pdfpath)
+		if config.getboolean(servicename, "Compress", fallback=False):
+			pdf.save(pdfpath, garbage=config.getint(servicename, "Garbage", fallback=3), clean=config.getboolean(servicename, "Clean", fallback=True), linear=config.getboolean(servicename, "Linearize", fallback=True))
+		else:
+			pdf.save(pdfpath)
 
 	booktable.upsert({"service": servicename, "bookid": bookid, "title": title, "pages": len(pdf), "path": str(pdfpath)}, (Query().service == servicename) and (Query().bookid == bookid))
 	return pdfpath

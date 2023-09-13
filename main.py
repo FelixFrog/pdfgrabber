@@ -216,8 +216,13 @@ def main():
 	if not (sys.version_info.major >= 3 and sys.version_info.minor >= 10):
 		console.print("Python version 3.10 or greater is required!", style="bold red")
 		exit()
-	console.print(banner, style="green bold", no_wrap=True, highlight=False)
-	console.print(Rule("version 1.0"))
+	showbanner = config.getboolean("pdfgrabber", "ShowBanner", fallback=True)
+	if showbanner:
+		console.print(banner, style="green bold", no_wrap=True, highlight=False)
+		console.print(Rule("version 1.0"))
+	else:
+		console.print(Rule("pdfgrabber version 1.0"))
+	
 	while True:
 		action = Prompt.ask("[magenta]What do you want to do?[/magenta] ((r)egister new user, (d)ownload from your libraries, download from a (o)ne-shot link, (l)ogout, manage (t)okens, (v)iew all books, (q)uit)", choices=["r", "d", "o", "l", "t", "v", "q"], default="d")
 		match action:
