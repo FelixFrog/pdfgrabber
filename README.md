@@ -61,8 +61,12 @@ Both RPLUS_PDF and RPLUS_EPUB books are stored in a password protected zip file.
 For personalized support, contact me on [telegram](https://t.me/fflxx).
 We also accept donations, so we can keep this project up! 
 
-<a href="https://liberapay.com/flx/donate"><img alt="Donate using Liberapay" src="https://liberapay.com/assets/widgets/donate.svg"></a>
+[![liberapay](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/flx/donate)
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Z8Z4PCZUI)
+
+Also [Satispay](https://www.satispay.com/app/match/link/user/S6Y-CON--A7BC8CDF-2EF5-40B7-884C-FDAB482CA8ED)
+
+
 # Disclaimer
 This script is provided "as is", without any type of warranty. I am not responsible of any harm or nuclear war that this may cause.
