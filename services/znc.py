@@ -293,19 +293,21 @@ def downloadkitaboo(token, isbn, pdf, toc, labels, progress, skipfirst):
 					appended.append(pagefile)
 
 					fullpath = tmpdir / "OPS" / pagefile
-					sizematch = re.search('content.+?width\s?=\s?([0-9]+).+?height\s?=\s?([0-9]+)', open(fullpath, encoding="utf-8").read())
+					if not fullpath.is_file():
+						pdf.new_page(pno=-1)
+					else:
+						sizematch = re.search('content.+?width\s?=\s?([0-9]+).+?height\s?=\s?([0-9]+)', open(fullpath, encoding="utf-8").read())
 
-					bpage.goto(fullpath.as_uri())
-					progress(round(unitstart + unitwidth / 4 + pagewidth * j), f"Rendering page {j + 1}/{len(pages)}")
+						bpage.goto(fullpath.as_uri())
+						progress(round(unitstart + unitwidth / 4 + pagewidth * j), f"Rendering page {j + 1}/{len(pages)}")
 
-					# Sometimes during spring 2023 someone changed the default chrome dev tools pdf print command to default to 144 dpi.
-					# Playwright (and Selenium as well) still haven't updated this from the previous default of 96 dpi.
-					width, height = str(int(sizematch.group(1)) / 144) + "in", str(int(sizematch.group(2)) / 144) + "in"
-					pdfpagebytes = bpage.pdf(print_background=True, width=width, height=height, page_ranges="1")
-					pagepdf = fitz.Document(stream=pdfpagebytes, filetype="pdf")
-					pdf.insert_pdf(pagepdf)
+						# Sometimes during spring 2023 someone changed the default chrome dev tools pdf print command to default to 144 dpi.
+						# Playwright (and Selenium as well) still haven't updated this from the previous default of 96 dpi.
+						width, height = str(int(sizematch.group(1)) / 144) + "in", str(int(sizematch.group(2)) / 144) + "in"
+						pdfpagebytes = bpage.pdf(print_background=True, width=width, height=height, page_ranges="1")
+						pagepdf = fitz.Document(stream=pdfpagebytes, filetype="pdf")
+						pdf.insert_pdf(pagepdf)
 			browser.close()
-		# input(f"{tmpdir}")
 
 	tocobj = et.fromstring(baseresource.read("OPS/toc.xml").decode())
 	for i in tocobj.find("toc").findall("node"):
