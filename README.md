@@ -58,6 +58,11 @@ Scuolabook has a very strict login system, where you can have only 2 devices log
 ## Pearson
 Both RPLUS_PDF and RPLUS_EPUB books are stored in a password protected zip file. Python's ZipFile module doesn't do the decryption natively, so it might take a (very) long time for some big books in the "Extracting zip" phase. If you have found a decent workaround let me know.
 # Support
-My [telegram](https://t.me/fflxx)
+For personalized support, contact me on [telegram](https://t.me/fflxx).
+We also accept donations, so we can keep this project up! 
+
+<a href="https://liberapay.com/flx/donate"><img alt="Donate using Liberapay" src="https://liberapay.com/assets/widgets/donate.svg"></a>
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Z8Z4PCZUI)
 # Disclaimer
 This script is provided "as is", without any type of warranty. I am not responsible of any harm or nuclear war that this may cause.
