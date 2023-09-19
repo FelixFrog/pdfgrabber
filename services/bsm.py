@@ -10,7 +10,7 @@ import config
 
 service = "bsm"
 
-key = bytes([30, 0, 184, 152, 115, 19, 157, 33, 4, 237, 80, 26, 139, 248, 104, 155])
+key = bytes.fromhex("1e00b89873139d2104ed501a8bf8689b")
 
 config = config.getconfig()
 
@@ -67,7 +67,9 @@ def library(token):
 	books = dict()
 	for i in getlibrary(token):
 		if i["liquid_text"]:
-			continue
+			# Seems like the liquid_text property doesn't refer to the format of the books. Further investigation on the app is required. 
+			# As of now, this enables the download of all books
+			pass
 		books[str(i["id"])] = {"title": i["title"], "revision": i["current_edition"]["revision"], "cover": i["cover"]}
 
 	if config.getboolean(service, "Preactivations", fallback=True):
