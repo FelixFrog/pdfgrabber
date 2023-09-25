@@ -73,6 +73,13 @@ def downloadbook(token, bookid, data, progress):
 	spine = getlibrary(token, data["isbn"])
 
 	notnumbered = spine["pagine_non_numerate"]
+	labels = [page.get_label() for page in pdf]
+	firstnum = next(index - int(num) + 1 for index, num in enumerate(labels) if num.isdigit())
+
+	if notnumbered == 0 and firstnum != notnumbered and not labels[0].isdigit():
+		# Not sure about this one, as of now this seems like a good guess. Maybe spine["raggruppamento"] means something?
+		notnumbered += firstnum
+
 	for i in spine["sezioni"]:
 		toc.extend(getoutlines(i, notnumbered, 1))
 
