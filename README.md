@@ -2,22 +2,21 @@
 This vendor-agnostic script is used to download pdfs (and covers) from different services.
 # State of features
 
-| service | pdf download | table of contents | pdf size | max logins | page labels | login expire | cover | rendered |
-| ------- | :----------: | :---------------: | :------: | :--------: | :---------: | :----------: | :---: | :-----: |
-| Scuolabook | perfect | yes (very small) | excellent | very restrictive | yes | never | yes | no |
-| MyLim | perfect | excellent | excellent | no | not yet/depends on vendor | ? | yes | no |
-| Pearson eText | perfect | (depends on vendor)/excellent | big | no | no/depends on vendor | very fast (30 min) | yes | sometimes |
-| Pearson Reader+ | yes | good/very good | big | no | yes | very fast (30 min) | yes | no |
-| bSmart | yes | yes (very small) | very big (100+ mb) | no | yes | ? | yes | no |
-| Mondadori HUB Scuola | yes | yes | very big (100+ mb) | no | yes (disable because glitches) | ? | yes | no |
-| MEE2 | yes | yes (very small) | good/excellent | no/1token4ever | no | never | yes (?) | no |
-| easyeschool | yes | yes (very small) | excellent | no/1token4ever | no | never | yes | no |
-| Zanichelli Booktab | yes | yes | good/average | yes | yes | ? | yes | no |
-| Zanichelli Kitaboo | yes | yes | average/big | yes | yes | ? | yes | yes |
-| Oxford Learner’s Bookshelf | yes | yes (small) | very big | ? | not yet/no | ? | yes | no |
-| Laterza diBooK | yes | yes/(depends on vendor) | excellent | ? | not yet/no | ? | yes | no |
-| Raffaello Player | yes | yes (incomplete bc no samples :-( | very big | ? | yes | ? | yes | no |
-| Cambridge GO | yes | yes | big | no | yes | yes | yes | yes |
+| service | pdf download | table of contents | pdf size | max logins | page labels | login expire | cover | rendered | refershes tokens |
+| ------- | :----------: | :---------------: | :------: | :--------: | :---------: | :----------: | :---: | :------: | :--------------: |
+| Scuolabook | perfect | yes (very small) | excellent | very restrictive | yes | never | yes | no | no |
+| MyLim | perfect | excellent | excellent | no | not yet/depends on vendor | ? | yes | no | no |
+| Pearson+ / eText / Reader+ | perfect/yes | (depends on vendor)/excellent | big | no | yes/depends on vendor/no | ? | yes | sometimes | yes |
+| bSmart | yes | yes (very small) | very big (100+ mb) | no | yes | ? | yes | no | no |
+| Mondadori HUB Scuola | yes | yes | very big (100+ mb) | no | yes (disable because glitches) | ? | yes | no | no |
+| MEE2 | yes | yes (very small) | good/excellent | no/1token4ever | no | never | yes (?) | no | no |
+| easyeschool | yes | yes (very small) | excellent | no/1token4ever | no | never | yes | no | no |
+| Zanichelli Booktab | yes | yes | good/average | yes | yes | ? | yes | no | no |
+| Zanichelli Kitaboo | yes | yes | average/big | yes | yes | ? | yes | yes | no |
+| Oxford Learner’s Bookshelf | yes | yes (small) | very big | ? | not yet/no | ? | yes | no | no |
+| Laterza diBooK | yes | yes/(depends on vendor) | excellent | ? | not yet/no | ? | yes | no | no |
+| Raffaello Player | yes | yes (incomplete bc no samples :-( | very big | ? | yes | ? | yes | no | no |
+| Cambridge GO | yes | yes | big | no | yes | yes | yes | yes | no |
 
 Apps that I am aware of but I can't work with beacuse I don't have books:
  - Appbook (might be a shitty html webview like booktab)

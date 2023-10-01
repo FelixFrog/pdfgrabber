@@ -24,7 +24,8 @@ import re
 service = "prs"
 
 # It probabily is such a happy time to maintain this pearson's legacy codebase
-clientid = "cGnFEyiajGgv2EhcShCPBa7jqwSFpSG5"
+reader_etext_clientid = "cGnFEyiajGgv2EhcShCPBa7jqwSFpSG5"
+pearson_plus_clientid = "t1txmB9oRay3yK5aIQxsS28Z9T19xMLM"
 hawkkeyid = "GPgRTj6fOI"
 hawkkey = "UTpkeCcbmFwsz0DAGZRhnkGuQGoYVz6a"
 appid = "54c89f6c1d650fdeccbef5cd"
@@ -32,16 +33,16 @@ tenantid = "0a0e20af-1ef3-4650-8f44-48c3bc5f9584"
 tenantkey = "9edbf937-3955-4c98-a698-07718a6380df"
 rpluszipkey = "sDkjhfkj8yhn8gig"
 
-def getetexttoken(username, password):
+def getetexttoken(username, password, clientid):
 	r = requests.post("https://login.pearson.com/v1/piapi/login/webcredentials", data={"password": password, "isMobile": "true", "grant_type": "password", "client_id": clientid, "username": username}, headers={"User-Agent": "mobile_app"})
 	return r.json()
 
-def resolveescrow(escrowticket):
+def resolveescrow(escrowticket, clientid):
 	r = requests.post("https://login.pearson.com/v1/piapi/login/webacceptconsent", data={"escrowTicket": escrowticket, "client_id": clientid})
 	return r.json()
 
-def refreshetexttoken(refreshtoken):
-	r = requests.post("https://login.pearson.com/v1/piapi/login/webcredentials", data={"refresh": "true", "client_id": clientid, "isMobile": "true"}, cookies={"PiAuthSession": refreshtoken})
+def refreshetexttoken(refreshtoken, clientid):
+	r = requests.post("https://login.pearson.com/v1/piapi/login/webtoken", data={"refresh": "true", "client_id": clientid, "isMobile": "true"}, cookies={"PiAuthSession": refreshtoken})
 	return r.json()
 
 def getetextuserinfo(userid, token):
@@ -155,28 +156,26 @@ def cover(token, bookid, data):
 		r = requests.get(data["cover"])
 		return r.content
 
-def refreshtoken(token):
+def refreshtoken(token, clientid=reader_etext_clientid):
 	etexttoken, etextuserid, rplustoken, rplususerid, refreshtoken = tuple(token.split("|"))
-	refresh = refreshetexttoken(refreshtoken)
-	if "error" not in refresh:
+	refresh = refreshetexttoken(refreshtoken, clientid)
+	if refresh["status"] == "success":
 		etexttoken, refreshtoken = refresh["data"]["access_token"], refresh["data"]["refresh_token"]
-	etextuserinfo = getetextuserinfo(etextuserid, etexttoken)
-	rplususerinfo = getrplususerinfo(rplustoken)
-	if "error" not in etextuserinfo and "error" not in rplususerinfo:
-		return "|".join([etexttoken, etextuserid, rplustoken, rplususerid, refreshtoken])
+		etextuserinfo = getetextuserinfo(etextuserid, etexttoken)
+		if "error" not in etextuserinfo:
+			return "|".join([etexttoken, etextuserid, rplustoken, rplususerid, refreshtoken])
 
 def checktoken(token):
 	etexttoken, etextuserid, rplustoken, rplususerid, refreshtoken = tuple(token.split("|"))
 	etextuserinfo = getetextuserinfo(etextuserid, etexttoken)
-	rplususerinfo = getrplususerinfo(rplustoken)
-	if "error" not in etextuserinfo and "error" not in rplususerinfo:
+	if "error" not in etextuserinfo:
 		return "|".join([etexttoken, etextuserid, rplustoken, rplususerid, refreshtoken])
 
-def login(username, password):
-	logindata = getetexttoken(username, password)
+def login(username, password, clientid=reader_etext_clientid):
+	logindata = getetexttoken(username, password, clientid)
 	if "data" not in logindata:
 		if len(logindata["message"]) == 10:
-			logindata = resolveescrow([logindata["message"]])
+			logindata = resolveescrow([logindata["message"]], clientid)
 		else:
 			return
 	etexttoken, etextuserid = logindata["data"]["access_token"], logindata["data"]["userId"]
@@ -196,7 +195,10 @@ def login(username, password):
 def library(token):
 	etexttoken, etextuserid, rplustoken, rplususerid, refreshtoken = tuple(token.split("|"))
 	books = {}
-	for i in getbookshelf(etexttoken, rplustoken, rplususerid):
+	bookshelf = getbookshelf(etexttoken, rplustoken, rplususerid)
+	if "error" in bookshelf:
+		return
+	for i in bookshelf:
 		books[str(i["book_id"])] = {"title": i["book_title"], "cover": i["cover_image_url"], "isbn": i["isbn"], "type": i["product_model"], "prodid": i["product_id"], "author": i["author"], "pwd": i["encrypted_password"], "url": i["downloadUrl"]}
 	
 	return books

@@ -9,7 +9,7 @@ import lib
 
 service = "sbk"
 
-mac_addr_key = bytes([216, 91, 116, 201, 254, 232, 59, 197, 16, 83, 63, 210, 235, 58, 127, 142])
+mac_addr_key = bytes.fromhex("d85b74c9fee83bc510533fd2eb3a7f8e")
 
 def getlogindata(username, password):
 	r = requests.post("https://app.scuolabook.it/store/public/login", data={"username": username, "password": password})
@@ -81,6 +81,7 @@ def createdeviceidhash(sessionid):
 	return md5(salted).digest()
 
 def login(username, password):
+	print("WARNING: Scuolabook will cease to operate on 31/12/2023!")
 	logindata = getlogindata(username, password)
 	errorcode = next(i.text for i in logindata.findall("field") if i.get("name") == "errorCode")
 	if errorcode != "0":

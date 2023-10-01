@@ -82,7 +82,12 @@ def downloadbook():
 		with console.status("[bold green]Checking token...") as status:
 			check = utils.checktoken(service, token)
 			if not check:
-				token = ""
+				status.update("[bold green]Refreshing token...")
+				refresh = utils.refreshtoken(service, token)
+				if not refresh:
+					token = ""
+				else:
+					token = refresh
 
 	if not token:
 		answer = Confirm.ask(f"Do you have a token for [b]{servicename}[/b]?", default=False)
@@ -97,12 +102,13 @@ def downloadbook():
 				console.print(f"Logged in, your token is [bold green]{token}[/bold green]")
 			else:
 				console.print(f"Error: Unable to authenticate to [b]{servicename}[/b]", style="red")
-				exit()
+				return
 
 		with console.status("[bold green]Checking token...") as status:
 			check = utils.checktoken(service, token)
 			if not check:
-				exit()
+				console.print(f"[b]{servicename}[/b] log in generated an invalid token! Report this issue!", style="red")
+				return
 			else:
 				utils.addtoken(userid, service, token)
 
