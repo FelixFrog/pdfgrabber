@@ -15,7 +15,7 @@ usertable = db.table("users")
 tokentable = db.table("tokens")
 booktable = db.table("books")
 
-services = {"bsm": "bSmart", "ees": "easyeschool", "hbs": "Mondadori HUB Scuola", "mcm": "MEE2", "myl": "MyLim", "prs": "Pearson eText / Reader+", "psp": "Pearson+", "sbk": "Scuolabook", "znc": "Zanichelli Booktab / Kitaboo", "dbk": "Laterza diBooK", "olb": "Oxford Learner’s Bookshelf", "rfl": "Raffaello Player", "cmb": "Cambridge GO"}
+services = {"bsm": "bSmart", "ees": "easyeschool", "hbs": "Mondadori HUB Scuola", "mcm": "MEE2", "myl": "MyLim", "prs": "Pearson eText / Reader+", "psp": "Pearson+", "sbk": "Scuolabook", "znc": "Zanichelli Booktab / Kitaboo", "dbk": "Laterza diBooK", "olb": "Oxford Learner’s Bookshelf", "rfl": "Raffaello Player", "cmb": "Cambridge GO", "blk": "Blinklearning", "hoe": "HoepliAcademy+"}
 oneshots = {"gnt": "mydBook Giunti TVP"}
 
 def getservice(name, oneshot=False):

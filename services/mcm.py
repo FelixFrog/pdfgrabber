@@ -10,19 +10,24 @@ import fitz
 
 service = "mcm"
 
-iv = bytes([210, 195, 46, 0, 0, 0, 0, 0])
-headerxorkey = bytes([123, 88, 230, 70, 34, 53, 227, 3])
+iv = bytes.fromhex("d2c32e0000000000")
+headerxorkey = bytes.fromhex("7b58e6462235e303")
 
-def getlogindata(username, password):
-	r = requests.get("https://mee2.macmillan.education/LMS/login.php", params={"email": username, "contrasena": password})
+macmillan_baseurl = "https://mee2.macmillan.education"
+
+def getlogindata(username, password, baseurl):
+	r = requests.get(baseurl + "/LMS/login.php", params={"email": username, "contrasena": password})
 	return r.json()
 
-def getbaseres(token):
-	r = requests.get("https://mee2.macmillan.education/LMS/downloaderPlus.php", params={"IDSESSIONDIRECT": token, "op": "getdiff", "last_update": 0, "synchromode": 1})
-	return r.json()
+def getbaseres(token, baseurl, raw=False):
+	r = requests.get(baseurl + "/LMS/downloaderPlus.php", params={"IDSESSIONDIRECT": token, "op": "getdiff", "last_update": 0, "synchromode": 1})
+	if raw:
+		return r.text
+	else:
+		return r.json()
 
-def getbookzips(token, bookid):
-	r = requests.get("https://mee2.macmillan.education/LMS/downloaderPlus.php", params={"IDSESSIONDIRECT": token, "op": "getdiff", "last_update": 0, "elemid": bookid, "elem": "course", "synchromode": 2, "device": "androidapp"})
+def getbookzips(token, bookid, baseurl):
+	r = requests.get(baseurl + "/LMS/downloaderPlus.php", params={"IDSESSIONDIRECT": token, "op": "getdiff", "last_update": 0, "elemid": bookid, "elem": "course", "synchromode": 2, "device": "androidapp"})
 	return r.json()
 
 def downloadzip(url, progress=False, total=0, done=0):
@@ -38,12 +43,16 @@ def downloadzip(url, progress=False, total=0, done=0):
 	else:
 		return zipfile.ZipFile(BytesIO(r.content), "r")
 
-def cover(token, bookid, data):
-	return b""
+def getcover(path, baseurl):
+	r = requests.get(baseurl + path)
+	return r.content
 
-def checktoken(token):
-	r = requests.get("https://mee2.macmillan.education/LMS/downloaderPlus.php", params={"IDSESSIONDIRECT": token, "op": "getdiff", "last_update": 0, "synchromode": 1})
-	return bool(r.text)
+def cover(token, bookid, data, baseurl=macmillan_baseurl):
+	return getcover(data["cover"], baseurl)
+
+def checktoken(token, baseurl=macmillan_baseurl):
+	baseres = getbaseres(token, baseurl, True)
+	return bool(baseres)
 
 def decryptfile(file, key):
 	if not key:
@@ -54,17 +63,17 @@ def decryptfile(file, key):
 		header = bytes([a ^ b for (a, b) in zip(headerxorkey, dec[:8])])
 		return unpad(header + dec[8:], DES3.block_size)
 
-def login(username, password):
-	logindata = getlogindata(username, password)
-	if "userToken" not in logindata:
+def login(username, password, baseurl=macmillan_baseurl):
+	logindata = getlogindata(username, password, baseurl)
+	if logindata["result"] != "OK":
 		print("Login failed: " + logindata["msg"])
 	else:
-		import time
-		print("Expires "  + str(int(time.mktime(time.strptime(logindata["mode_expiration"], "%Y%m%d%H%M%S")))))
+		#import time
+		#print("Expires "  + str(int(time.mktime(time.strptime(logindata["mode_expiration"], "%Y%m%d%H%M%S")))))
 		return logindata["userToken"]
 
-def library(token):
-	baseres = getbaseres(token)
+def library(token, baseurl=macmillan_baseurl):
+	baseres = getbaseres(token, baseurl)
 
 	url = next(i["url"] for i in baseres["zips"] if "tmp" in i["url"])
 	ids = [i["id"] for i in baseres["elements"]["courses"]]
@@ -78,9 +87,9 @@ def library(token):
 	
 	return books
 
-def downloadbook(token, bookid, data, progress):
+def downloadbook(token, bookid, data, progress, baseurl=macmillan_baseurl):
 	progress(0, "Getting book zips")
-	bookzips = getbookzips(token, bookid)
+	bookzips = getbookzips(token, bookid, baseurl)
 
 	units = umsgpack.unpackb(b64decode(data["toc"]))
 

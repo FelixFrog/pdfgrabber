@@ -12,22 +12,24 @@ service = "bsm"
 
 key = bytes.fromhex("1e00b89873139d2104ed501a8bf8689b")
 
+bsmart_baseurl = "https://www.bsmart.it"
+
 config = config.getconfig()
 
-def getlogindata(username, password):
-	r = requests.post("https://www.bsmart.it/api/v5/session", data={"password": password, "email": username})
+def getlogindata(username, password, baseurl):
+	r = requests.post(baseurl + "/api/v5/session", data={"password": password, "email": username})
 	return r.json()
 
-def getlibrary(token):
-	r = requests.get("https://www.bsmart.it/api/v5/books", headers={"AUTH_TOKEN": token}, params={"per_page": 1000000, "page_thumb_size": "medium"})
+def getlibrary(token, baseurl):
+	r = requests.get(baseurl + "/api/v5/books", headers={"AUTH_TOKEN": token}, params={"per_page": 1000000, "page_thumb_size": "medium"})
 	return r.json()
 
-def getpreactivations(token):
-	r = requests.get("https://www.bsmart.it/api/v5/books/preactivations", headers={"AUTH_TOKEN": token})
+def getpreactivations(token, baseurl):
+	r = requests.get(baseurl + "/api/v5/books/preactivations", headers={"AUTH_TOKEN": token})
 	return r.json()
 
-def getbookinfo(token, bookid, revision, operation):
-	r = requests.get("https://www.bsmart.it/api/v5/books/" + str(bookid) + "/" + str(revision) + "/" + operation, headers={"AUTH_TOKEN": token}, params={"per_page": 1000000})
+def getbookinfo(token, bookid, revision, operation, baseurl):
+	r = requests.get(baseurl + "/api/v5/books/" + str(bookid) + "/" + str(revision) + "/" + operation, headers={"AUTH_TOKEN": token}, params={"per_page": 1000000})
 	return r.json()
 
 def downloadpack(url, progress, total, done):
@@ -52,20 +54,20 @@ def decryptfile(file):
 
 	return unpad(dec, AES.block_size) + file.read(), header["md5"]
 
-def login(username, password):
-	logindata = getlogindata(username, password)
+def login(username, password, baseurl=bsmart_baseurl):
+	logindata = getlogindata(username, password, baseurl)
 	if "auth_token" not in logindata:
 		print("Login failed: " + logindata["message"])
 	else:
 		return logindata["auth_token"]
 
-def checktoken(token):
-	test = getlibrary(token)
+def checktoken(token, baseurl=bsmart_baseurl):
+	test = getlibrary(token, baseurl)
 	return "message" not in test
 
-def library(token):
+def library(token, baseurl=bsmart_baseurl, service=service):
 	books = dict()
-	for i in getlibrary(token):
+	for i in getlibrary(token, baseurl):
 		if i["liquid_text"]:
 			# Seems like the liquid_text property doesn't refer to the format of the books. Further investigation on the app is required. 
 			# As of now, this enables the download of all books
@@ -73,7 +75,7 @@ def library(token):
 		books[str(i["id"])] = {"title": i["title"], "revision": i["current_edition"]["revision"], "cover": i["cover"]}
 
 	if config.getboolean(service, "Preactivations", fallback=True):
-		for i in getpreactivations(token):
+		for i in getpreactivations(token, baseurl):
 			for book in i["books"]:
 				if book["liquid_text"]:
 					continue
@@ -81,10 +83,10 @@ def library(token):
 
 	return books
 
-def downloadbook(token, bookid, data, progress):
+def downloadbook(token, bookid, data, progress, baseurl=bsmart_baseurl):
 	revision = data["revision"]
 	progress(0, "Getting resources")
-	resources = getbookinfo(token, bookid, revision, "resources")
+	resources = getbookinfo(token, bookid, revision, "resources", baseurl)
 	resmd5 = {}
 	for i in resources:
 		if i["resource_type_id"] != 14:
@@ -95,7 +97,7 @@ def downloadbook(token, bookid, data, progress):
 
 	pagespdf, labelsmap = {}, {}
 	progress(5, "Fetching asset packs")
-	assetpacks = getbookinfo(token, bookid, revision, "asset_packs")
+	assetpacks = getbookinfo(token, bookid, revision, "asset_packs", baseurl)
 
 	progress(10, "Downloading pdf pages")
 	pagespack = downloadpack(next(i["url"] for i in assetpacks if i["label"] == "page_pdf"), progress, 80, 10)
@@ -113,7 +115,7 @@ def downloadbook(token, bookid, data, progress):
 	toc, labels = [], []
 
 	progress(95, "Obtaining toc")
-	index = getbookinfo(token, bookid, revision, "index")
+	index = getbookinfo(token, bookid, revision, "index", baseurl)
 
 	bookmarks = {i["first_page"]["id"]:i["title"] for i in index if "first_page" in i}
 	for i, (pageid, pagepdfraw) in enumerate(sorted(pagespdf.items())):

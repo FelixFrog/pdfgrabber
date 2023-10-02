@@ -7,9 +7,9 @@ This vendor-agnostic script is used to download pdfs (and covers) from different
 | Scuolabook | perfect | yes (very small) | excellent | very restrictive | yes | never | yes | no | no |
 | MyLim | perfect | excellent | excellent | no | not yet/depends on vendor | ? | yes | no | no |
 | Pearson+ / eText / Reader+ | perfect/yes | (depends on vendor)/excellent | big | no | yes/depends on vendor/no | ? | yes | sometimes | yes |
-| bSmart | yes | yes (very small) | very big (100+ mb) | no | yes | ? | yes | no | no |
+| bSmart / HoepliAcademy+ | yes | yes (very small) | very big (100+ mb) | no | yes | ? | yes | no | no |
 | Mondadori HUB Scuola | yes | yes | very big (100+ mb) | no | yes (disable because glitches) | ? | yes | no | no |
-| MEE2 | yes | yes (very small) | good/excellent | no/1token4ever | no | never | yes (?) | no | no |
+| MEE2 / Blinklearning | yes | yes (very small) | good/excellent | no/1token4ever | no | never | yes | no | no |
 | easyeschool | yes | yes (very small) | excellent | no/1token4ever | no | never | yes | no | no |
 | Zanichelli Booktab | yes | yes | good/average | yes | yes | ? | yes | no | no |
 | Zanichelli Kitaboo | yes | yes | average/big | yes | yes | ? | yes | yes | no |
@@ -19,11 +19,10 @@ This vendor-agnostic script is used to download pdfs (and covers) from different
 | Cambridge GO | yes | yes | big | no | yes | yes | yes | yes | no |
 
 Apps that I am aware of but I can't work with beacuse I don't have books:
- - Appbook (might be a shitty html webview like booktab)
- - HoepliAcademy+ (bsmart instance)
+ - Appbook (might be a shitty html webview)
  - Digimparo (giuntitvp instance)
  - Vitalsource (american platform, very good protection)
- - digibook24 ("The platform was developed by www.bsmartlabs.com"?)
+ - digibook24 ("The platform was developed by bsmartlabs"?)
 
 ## TODO
  - Add anonymous user
