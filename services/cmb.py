@@ -150,6 +150,7 @@ def downloadbook(token, bookid, data, progress):
 				toc.extend(gentoc(sub, level + 1, pages, basedir))
 		return toc
 
+	fitz.TOOLS.mupdf_display_errors(False)
 	pdf = fitz.Document()
 	toc, labels, pages = [], [], []
 
@@ -170,29 +171,37 @@ def downloadbook(token, bookid, data, progress):
 		tocitem = next(i for i in tocfile.find("xhtml:body", ns).findall("xhtml:nav", ns) if i.get("{http://www.idpf.org/2007/ops}type") == "toc")
 		toc.extend(gentoc(tocitem.find("xhtml:ol", ns), 1, pages, navpath.parent))
 
-		pagelistitem = next(i for i in tocfile.find("xhtml:body", ns).findall("xhtml:nav", ns) if i.get("{http://www.idpf.org/2007/ops}type") == "page-list")
 		labelsdict = {}
-		for i in pagelistitem.find("xhtml:ol", ns).findall("xhtml:li", ns):
-			ref = i.find("xhtml:a", ns)
-			labelsdict[(navpath.parent / ref.get("href")).resolve()] = ref.text
+		pagelistitem = [i for i in tocfile.find("xhtml:body", ns).findall("xhtml:nav", ns) if i.get("{http://www.idpf.org/2007/ops}type") == "page-list"]
+		if pagelistitem:
+			for i in pagelistitem[0].find("xhtml:ol", ns).findall("xhtml:li", ns):
+				ref = i.find("xhtml:a", ns)
+				href = ref.get("href")
+				if "#" in href:
+					href = "#".join(href.split("#")[:-1])
+				labelsdict[(navpath.parent / href).resolve()] = ref.text
 
 		with sync_playwright() as p:
 			browser = p.chromium.launch()
 			page = browser.new_page()
 			for j, fullpath in enumerate(pages):
-				if label := labelsdict.get(fullpath):
-					labels.append(label)
-				else:
-					labels.append(str(j + 1))
-
 				sizematch = re.search('content.+?width\s?=\s?([0-9]+).+?height\s?=\s?([0-9]+)', open(fullpath, "r", encoding="utf-8-sig").read())
 
 				page.goto(fullpath.as_uri())
 				advancement = (j + 1) / len(pages) * 44 + 54
 				progress(advancement, f"Printing {j + 1}/{len(pages)}")
-				width, height = str(int(sizematch.group(1)) / 144) + "in", str(int(sizematch.group(2)) / 144) + "in"
-				pdfpagebytes = page.pdf(print_background=True, width=width, height=height, page_ranges="1")
+				if sizematch:
+					width, height = str(int(sizematch.group(1)) / 144) + "in", str(int(sizematch.group(2)) / 144) + "in"
+					pdfpagebytes = page.pdf(print_background=True, width=width, height=height, page_ranges="1")
+				else:
+					print("Liquid page detected!")
+					pdfpagebytes = page.pdf(print_background=True, margin={"left": "5mm", "right": "5mm"})
 				pagepdf = fitz.Document(stream=pdfpagebytes, filetype="pdf")
+
+				if label := labelsdict.get(fullpath):
+					labels.extend([label] * len(pagepdf))
+				else:
+					labels.extend(list(map(str, list(range(len(pdf) + 1, len(pdf) + 1 + len(pagepdf))))))
 				pdf.insert_pdf(pagepdf)
 			browser.close()
 
