@@ -24,6 +24,10 @@ banner = """
                   /____/
 """
 
+def center(var:str, space:int=None):
+	'''center elements (text) in the terminal'''
+	return '\n'.join(' ' * int(space or (os.get_terminal_size().columns - len(var.splitlines()[len(var.splitlines()) // 2])) / 2) + line for line in var.splitlines())
+
 def login():
 	global userid
 	username, password = "", ""
@@ -224,7 +228,7 @@ def main():
 		exit()
 	showbanner = config.getboolean("pdfgrabber", "ShowBanner", fallback=True)
 	if showbanner:
-		console.print(banner, style="green bold", no_wrap=True, highlight=False)
+		console.print(center(banner), style="green bold", no_wrap=True, highlight=False)
 		console.print(Rule("version 1.0"))
 	else:
 		console.print(Rule("pdfgrabber version 1.0"))
