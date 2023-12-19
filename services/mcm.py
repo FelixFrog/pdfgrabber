@@ -113,6 +113,8 @@ def downloadbook(token, bookid, data, progress, baseurl=macmillan_baseurl):
 	for unit in units:
 		toc.append([1, unit["title"], pcount])
 		for subunit in unit["subunits"]:
+			if subunit["type"] != "libro":
+				continue
 			sujson = json.loads(files["librodigital_json_abs_1_idclase_" + subunit["id"] + "_idcurso_" + bookid + "_type_json_xdevice_ipadapp.htm"])
 			filename = sujson["pdfUrlOffline"].rpartition("/")[2]
 			supdf = fitz.Document(stream=files[filename], filetype="pdf")
