@@ -17,12 +17,14 @@ This vendor-agnostic script is used to download pdfs (and covers) from different
 | Laterza diBooK | yes | yes/(depends on vendor) | excellent | ? | not yet/no | ? | yes | no | no |
 | Raffaello Player | yes | yes (incomplete bc no samples :-( | very big | ? | yes | ? | yes | no | no |
 | Cambridge GO | yes | yes | big | no | yes | yes | yes | yes | no |
+| Palumbo Editore - Saggi Digitali | yes | yes | average/big | no | no | no | yes | no | no |
 
 Apps that I am aware of but I can't work with beacuse I don't have books:
  - Appbook (might be a shitty html webview)
  - Digimparo (giuntitvp instance)
  - Vitalsource (american platform, very good protection)
  - digibook24 ("The platform was developed by bsmartlabs"?)
+ - Edisco Flowbook (more giuntitvp-like garbage?)
 
 ## TODO
  - Add anonymous user
@@ -52,7 +54,7 @@ Apps that I am aware of but I can't work with beacuse I don't have books:
 
 # Quirks
 ## Scuolabook
-Scuolabook has a very strict login system, where you can have only 2 devices logged in and you only have 2 deletions per year. This means that you can only log in 4 times every year, with no way of downloading books (at least, the pdf version) if you have hit this limit. pdfgrabber should save the token for you, but you should also keep it somewhere safer such as a text document. 
+Scuolabook has shutdown on 01/01/2024
 ## Pearson
 Both RPLUS_PDF and RPLUS_EPUB books are stored in a password protected zip file. Python's ZipFile module doesn't do the decryption natively, so it might take a (very) long time for some big books in the "Extracting zip" phase. If you have found a decent workaround let me know.
 # Support
