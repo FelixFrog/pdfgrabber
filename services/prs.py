@@ -87,6 +87,10 @@ def downloadfile(url, progress, total, done, cdntoken=""):
 		progress(round(done + len(file) / length * total))
 	return file
 
+def downloadfile_nostream(url, cdntoken):
+	r = requests.get(url, headers={"etext-cdn-token": cdntoken})
+	return r.content
+
 def getrsakey(key):
 	# The keys are base64 decoded twice
 	decoded = b64decode(b64decode(key).decode())
@@ -121,7 +125,10 @@ def decryptfile(file, key):
 
 def getoutlines(item, labels, level):
 	subtoc = []
-	subtoc.append([level, item["title"], labels.index(item["pageno"]) + 1])
+	if item["pageno"] in labels:
+		subtoc.append([level, item["title"], labels.index(item["pageno"]) + 1])
+	else:
+		print("Missing page in the pdf! Incomplete toc!")
 	if "children" in item:
 		for i in item["children"]:
 			subtoc.extend(getoutlines(i, labels, level + 1))
@@ -220,17 +227,21 @@ def downloadetextbook(etexttoken, bookid, progress):
 	xsignature = computexsignature(keys["devicePhrase"], keys["signature-ddk"])
 	progress(5, "Getting book info")
 	bookinfo = getbookinfo(etexttoken, xsignature, bookid, deviceid)
-	progress(7, "Downloading encrypted book")
-	book = downloadfile(bookinfo["packageUrl"], progress, 81, 7, bookinfo["cdnToken"])
-	i = 1
-	while not book:
-		progress(7, f"Downloading, try #{i}")
+	if "packageUrl" in bookinfo and "securedKey" in bookinfo:
+		progress(7, "Downloading encrypted book")
 		book = downloadfile(bookinfo["packageUrl"], progress, 81, 7, bookinfo["cdnToken"])
-		i += 1
-	progress(88, "Computing decryption key")
-	key = computedecryptionkey(bookinfo["securedKey"], keys["ddk"])
-	progress(91, "Decrypting file")
-	decryptedbook = decryptfile(book, key)
+		i = 1
+		while not book:
+			progress(7, f"Downloading, try #{i}")
+			book = downloadfile(bookinfo["packageUrl"], progress, 81, 7, bookinfo["cdnToken"])
+			i += 1
+		progress(88, "Computing decryption key")
+		key = computedecryptionkey(bookinfo["securedKey"], keys["ddk"])
+		progress(91, "Decrypting file")
+		decryptedbook = decryptfile(book, key)
+	elif "alternateUrl" in bookinfo:
+		progress(7, "Downloading book")
+		decryptedbook = downloadfile_nostream(bookinfo["alternateUrl"], bookinfo["cdnToken"])
 
 	progress(93, "Opening pdf")
 	pdf = fitz.Document(stream=decryptedbook, filetype="pdf")
@@ -240,12 +251,13 @@ def downloadetextbook(etexttoken, bookid, progress):
 	toc = []
 
 	labels = [page.get_label() for page in pdf]
-	for i in tocobj["children"]:
-		if i["type"] in ["slate", "chapter"]:
-			toc.extend(getoutlines(i, labels, 1))
-
-	progress(98, "Applying toc")
-	pdf.set_toc(toc)
+	if "children" in tocobj:
+		for i in tocobj["children"]:
+			if i["type"] in ["slate", "chapter"]:
+				toc.extend(getoutlines(i, labels, 1))
+		progress(98, "Applying toc")
+		pdf.set_toc(toc)
+	
 	return pdf
 
 def downloadrpluspdf(url, password, progress):
