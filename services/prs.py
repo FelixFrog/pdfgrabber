@@ -199,6 +199,13 @@ def library(token):
 	if "error" in bookshelf:
 		return
 	for i in bookshelf:
+		end = i["product_entitlements"]["end_date"]
+		if end:
+			try:
+				if time.time() > time.mktime(time.strptime(end, "%Y-%m-%dT%H:%M:%S.%f%z")):
+					continue
+			except ValueError:
+				pass
 		books[str(i["book_id"])] = {"title": i["book_title"], "cover": i["cover_image_url"], "isbn": i["isbn"], "type": i["product_model"], "prodid": i["product_id"], "author": i["author"], "pwd": i["encrypted_password"], "url": i["downloadUrl"]}
 	
 	return books

@@ -143,15 +143,27 @@ def downloadbook():
 	
 	def checknumber(n):
 		if n.isdigit():
-			return int(n) < len(id2bookid)
+			return int(n) < len(id2bookid) and int(n) >= 0
+		if n.count("-") == 1:
+			if all(map(checknumber, n.split("-"))):
+				return n.split("-")[0] <= n.split("-")[1]
+			else:
+				return False
 		else:
 			return False
 
 	while not all(map(checknumber, choices)):
 		choices = Prompt.ask("Invalid choice. Try again").split(",")
 
+	finalchoices = []
 	for i in choices:
-		bookid = id2bookid[int(i)]
+		if "-" in i:
+			finalchoices.extend(list(range(int(i.split("-")[0]), int(i.split("-")[1]) + 1)))
+		else:
+			finalchoices.append(int(i))
+
+	for i in finalchoices:
+		bookid = id2bookid[i]
 		with Progress() as progress:
 			maintask = progress.add_task("Starting...", total=100)
 			def progressfun(update, status=""):
