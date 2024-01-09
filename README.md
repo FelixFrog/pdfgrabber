@@ -20,7 +20,7 @@ This vendor-agnostic script is used to download pdfs (and covers) from different
 | Palumbo Editore - Saggi Digitali | yes | yes | average/big | no | no | no | yes | no | no |
 
 Apps that I am aware of but I can't work with beacuse I don't have books:
- - Appbook (might be a shitty html webview)
+ - ~~Appbook (might be a shitty html webview)~~
  - Digimparo (giuntitvp instance)
  - Vitalsource (american platform, very good protection)
  - digibook24 ("The platform was developed by bsmartlabs"?)
