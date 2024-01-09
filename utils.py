@@ -17,7 +17,7 @@ booktable = db.table("books")
 
 services = {"bsm": "bSmart", "ees": "easyeschool", "hbs": "Mondadori HUB Scuola", "mcm": "MEE2", "myl": "MyLim", "prs": "Pearson eText / Reader+", "psp": "Pearson+", "sbk": "Scuolabook", "znc": "Zanichelli Booktab / Kitaboo", "dbk": "Laterza diBooK", "olb": "Oxford Learner’s Bookshelf", "rfl": "Raffaello Player", "cmb": "Cambridge GO", "blk": "Blinklearning", "hoe": "HoepliAcademy+", "pmb": "Palumbo Editore - Saggi Digitali"}
 nologin = ["pmb"]
-oneshots = {"gnt": "mydBook Giunti TVP"}
+oneshots = {"gnt": "mydBook Giunti TVP", "apb": "AppBook"}
 
 def getservice(name, oneshot=False):
 	if oneshot:
