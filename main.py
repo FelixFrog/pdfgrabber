@@ -15,7 +15,7 @@ userid = False
 
 config = config.getconfig()
 
-banner = """
+banner = r"""
     ____  ____  ______                 __    __
    / __ \/ __ \/ ____/___ __________ _/ /_  / /_  ___  _____
   / /_/ / / / / /_  / __ `/ ___/ __ `/ __ \/ __ \/ _ \/ ___/
@@ -24,8 +24,7 @@ banner = """
                   /____/
 """
 
-def center(var:str, space:int=None):
-	'''center elements (text) in the terminal'''
+def center(var, space=None):
 	return '\n'.join(' ' * int(space or (os.get_terminal_size().columns - len(var.splitlines()[len(var.splitlines()) // 2])) / 2) + line for line in var.splitlines())
 
 def login():

@@ -185,7 +185,7 @@ def downloadbook(token, bookid, data, progress):
 			browser = p.chromium.launch()
 			page = browser.new_page()
 			for j, fullpath in enumerate(pages):
-				sizematch = re.search('content.+?width\s?=\s?([0-9]+).+?height\s?=\s?([0-9]+)', open(fullpath, "r", encoding="utf-8-sig").read())
+				sizematch = re.search(r'content.+?width\s?=\s?([0-9]+).+?height\s?=\s?([0-9]+)', open(fullpath, "r", encoding="utf-8-sig").read())
 
 				page.goto(fullpath.as_uri())
 				advancement = (j + 1) / len(pages) * 44 + 54

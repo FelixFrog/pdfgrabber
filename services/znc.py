@@ -296,7 +296,7 @@ def downloadkitaboo(token, isbn, pdf, toc, labels, progress, skipfirst):
 					if not fullpath.is_file():
 						pdf.new_page(pno=-1)
 					else:
-						sizematch = re.search('content.+?width\s?=\s?([0-9]+).+?height\s?=\s?([0-9]+)', open(fullpath, encoding="utf-8").read())
+						sizematch = re.search(r'content.+?width\s?=\s?([0-9]+).+?height\s?=\s?([0-9]+)', open(fullpath, encoding="utf-8").read())
 
 						bpage.goto(fullpath.as_uri())
 						progress(round(unitstart + unitwidth / 4 + pagewidth * j), f"Rendering page {j + 1}/{len(pages)}")

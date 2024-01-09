@@ -116,9 +116,9 @@ def checktoken(token):
 	return status == "true"
 
 def guessmagic(file):
-	root = re.search(b"\/Root (\d+) (\d+) R", file)
+	root = re.search(br"\/Root (\d+) (\d+) R", file)
 	refnum = int(root.group(1))
-	for objnum, contents in re.findall(b"(\d{,12}) \d{,12} obj(.+?)endobj", file, re.S):
+	for objnum, contents in re.findall(br"(\d{,12}) \d{,12} obj(.+?)endobj", file, re.S):
 		if b"/Catalog" in contents:
 			return int(objnum) ^ refnum
 

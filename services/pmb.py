@@ -44,7 +44,7 @@ def library(token):
 	for book in bookparent.find_class("libro"):
 		title = book.get("title").replace("<br>", "- ").strip()
 		link = book.find("a")
-		reader = re.search("https:\/\/www\.palumboeditore\.it\/Biblioteca\/reader\/d\/(\w+)\/", link.get("onclick"))
+		reader = re.search(r"https:\/\/www\.palumboeditore\.it\/Biblioteca\/reader\/d\/(\w+)\/", link.get("onclick"))
 		if reader:
 			bookid = reader.group(1)
 			cover = "https://www.palumboeditore.it" + link.find("img").get("src")
@@ -107,7 +107,7 @@ def downloadbook(token, bookid, data, progress):
 				file_data = zlib.decompress(file_data, -15)
 
 			if filename.startswith("Pages/") and filename.endswith(".xaml"):
-				file_data = re.sub(b"<Glyphs.+?UnicodeString=\"www\.pdftron\.com\".+?/>[\n.]*?<Path.+?Data=.+?/>", b"", file_data, count=1)
+				file_data = re.sub(br"<Glyphs.+?UnicodeString=\"www\.pdftron\.com\".+?/>[\n.]*?<Path.+?Data=.+?/>", b"", file_data, count=1)
 
 			temp_zip.writestr(filename, file_data)
 

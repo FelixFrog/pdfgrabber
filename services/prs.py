@@ -332,7 +332,7 @@ def downloadrplusepub(url, password, progress):
 				else:
 					labels.append(str(j + 1))
 
-				sizematch = re.search('content.+?width\s?=\s?([0-9]+).+?height\s?=\s?([0-9]+)', open(fullpath, encoding="utf-8-sig").read())
+				sizematch = re.search(r'content.+?width\s?=\s?([0-9]+).+?height\s?=\s?([0-9]+)', open(fullpath, encoding="utf-8-sig").read())
 
 				page.goto(fullpath.as_uri())
 				advancement = (j + 1) / len(pages) * 62 + 36
