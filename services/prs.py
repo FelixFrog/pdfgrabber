@@ -24,8 +24,7 @@ import re
 service = "prs"
 
 # It probabily is such a happy time to maintain this pearson's legacy codebase
-reader_etext_clientid = "cGnFEyiajGgv2EhcShCPBa7jqwSFpSG5"
-pearson_plus_clientid = "t1txmB9oRay3yK5aIQxsS28Z9T19xMLM"
+reader_etext_clientid = "t1txmB9oRay3yK5aIQxsS28Z9T19xMLM"
 hawkkeyid = "GPgRTj6fOI"
 hawkkey = "UTpkeCcbmFwsz0DAGZRhnkGuQGoYVz6a"
 appid = "54c89f6c1d650fdeccbef5cd"
@@ -58,7 +57,12 @@ def getrplususerinfo(rplustoken):
 	return r.json()
 
 def getbookshelf(etexttoken, rplustoken, rplususerid):
-	r = requests.get("https://marin-api.prd-prsn.com/api/1.0/rplus/bookshelf", headers={"Authorization": f"Bearer {etexttoken}", "X-Tenant-Id": tenantid, "X-Tenant-Key": tenantkey, "X-Tenant-Region": "IRE"}) # "X-GAB-Authorization": rplustoken, "X-GAB-UserId": rplususerid
+	headers = {"Authorization": f"Bearer {etexttoken}"}
+	url = "https://marin-api.prd-prsn.com/api/1.0/bookshelf"
+	if (rplustoken and rplususerid):
+		headers |= {"X-Tenant-Id": tenantid, "X-Tenant-Key": tenantkey, "X-Tenant-Region": "IRE", "X-GAB-Authorization": rplustoken, "X-GAB-UserId": rplususerid}
+		url = "https://marin-api.prd-prsn.com/api/1.0/rplus/bookshelf"
+	r = requests.get(url, headers=headers)
 	return r.json()
 
 def getcdntoken(etexttoken, bookid):
