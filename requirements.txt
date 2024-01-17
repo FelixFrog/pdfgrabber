@@ -5,3 +5,4 @@ pycryptodome
 u-msgpack-python
 tinydb
 playwright
+lxml
