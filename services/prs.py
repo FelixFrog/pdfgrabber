@@ -318,8 +318,10 @@ def downloadrplusepub(url, password, progress):
 		
 		tocfile = et.fromstring(open(navpath, "r", encoding="utf-8-sig").read())
 
-		tocitem = next(i for i in tocfile.find("xhtml:body", ns).findall("xhtml:nav", ns) if i.get("{http://www.idpf.org/2007/ops}type") == "toc")
-		toc.extend(gentoc(tocitem.find("xhtml:ol", ns), 1, pages, navpath.parent))
+		tocitem = [i for i in tocfile.find("xhtml:body", ns).findall("xhtml:nav", ns) if i.get("{http://www.idpf.org/2007/ops}type") == "toc"]
+		if tocitem:
+			print("Your book doesn't have a table of contents!")
+			toc.extend(gentoc(tocitem[0].find("xhtml:ol", ns), 1, pages, navpath.parent))
 
 		pagelistitem = next(i for i in tocfile.find("xhtml:body", ns).findall("xhtml:nav", ns) if i.get("{http://www.idpf.org/2007/ops}type") == "page-list")
 		labelsdict = {}
