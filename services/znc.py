@@ -329,13 +329,17 @@ def library(token):
 	books = dict()
 	for i in library["books"]:
 		isbn = i["isbn"]
-		bookmetadata = next((j for j in metadata["books"] if j["isbn"] == isbn), False)
+		bookmetadata = [j for j in metadata["books"] if j["isbn"] == isbn]
 		#if bookmetadata and "-" not in isbn and isbn != "9100000000007":
+		if not bookmetadata:
+			continue
+		else:
+			bookmetadata = bookmetadata[0]
 		books[str(isbn)] = {"title": bookmetadata["title"], "format": i["format"], "cover": bookmetadata["cover"], "relatedisbns": i["relatedIsbns"], "version": i["version"]}
 		if "encryptionType" in i:
 			books[str(isbn)]["encryption"] = i["encryptionType"]
 		if configfile.getboolean(service, "ShowFormat", fallback=False):
-			books[str(isbn)]["title"] = i["format"] + " " + i["version"] + " - " + bookmetadata["title"]
+			books[str(isbn)]["title"] = f'{i["format"]} {i["version"]} - {books[str(isbn)]["title"]}'
 	return books
 
 def downloadbook(token, bookid, data, progress):
