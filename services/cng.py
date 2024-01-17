@@ -14,10 +14,13 @@ from tempfile import TemporaryDirectory
 import lib
 import json
 import re
+import config
 
 service = "cng"
 
 appid = "43a266a6-ff71-473d-896a-7b33b60f901c"
+
+configfile = config.getconfig()
 
 def getloginconfig():
 	r = requests.get(f"https://hapicen.com/v1/reader/{appid}/config")
@@ -182,7 +185,7 @@ def downloadhtml5(token, data, progress):
 		pages = []
 		toc = []
 		for i in p["content"]:
-			if i["modelName"] == "page" and i["isPage"] == "true":
+			if i["modelName"] == "page" and i["isPage"] == "true" and (i["display"] == "true" or configfile.getboolean(service, "AddHiddenPages", fallback=True)):
 				pages.append(i)
 				if i["title"] != i["logicalPageNumber"]:
 					toc.append([level, i["title"], s])

@@ -21,7 +21,7 @@ service = "znc"
 
 xorprivatekey = "VJTP4zAVsLlrpNXXTGV981Tn7zCew0MHD+VkofkRMPcLjLB+w0N/zj02HzPs/4aRDrDSawNqqN2oXH9V36O0vM2CaKH8duGfUhxF+dY3zAGa0UOaKYEZXEMwM0ZqRW7J8Su/gYV8twZQbyRggzl0LpYVhwiSuGnsPYy61qSGfK1PigKneXc3mzGK/0Oct+SL10rTCPHn3zloHmhJdnVFsk8o8CdR78mgg3dLSnEvaIlJppPfhi+qjnA7LUiAxhRxh5XokzOIUn04zyi4gyR2cPCRXpol0qsAf7vi0bzRUvM3TloqjjfLa3lKCOzLWixrYrhNLmu+hFfDik49h1kLVg=="
 
-config = config.getconfig()
+configfile = config.getconfig()
 
 def getlogindata(username, password):
 	logindata = {"username": username, "password": password, "device_id": get_random_bytes(8).hex(), "device_name": "iPhone Grosso (tm)", "dry_run": False}
@@ -252,7 +252,7 @@ def downloadkitaboo(token, isbn, pdf, toc, labels, progress, skipfirst):
 	with TemporaryDirectory(prefix="kitaboo.", ignore_cleanup_errors=True) as tmpname:
 		tmpdir = Path(tmpname)
 		basefiles = ["css", "images", "js", "fonts"]
-		if config.getboolean(service, "RemoveImages", fallback=True):
+		if configfile.getboolean(service, "RemoveImages", fallback=True):
 			basefiles.remove("images")
 		baseresource.extractall(tmpdir, [file for file in baseresource.namelist() if any(file.startswith("OPS/" + x) for x in basefiles)])
 
@@ -334,7 +334,7 @@ def library(token):
 		books[str(isbn)] = {"title": bookmetadata["title"], "format": i["format"], "cover": bookmetadata["cover"], "relatedisbns": i["relatedIsbns"], "version": i["version"]}
 		if "encryptionType" in i:
 			books[str(isbn)]["encryption"] = i["encryptionType"]
-		if config.getboolean(service, "ShowFormat", fallback=False):
+		if configfile.getboolean(service, "ShowFormat", fallback=False):
 			books[str(isbn)]["title"] = i["format"] + " " + i["version"] + " - " + bookmetadata["title"]
 	return books
 
@@ -344,15 +344,15 @@ def downloadbook(token, bookid, data, progress):
 	labels = []
 	relatedisbns = data["relatedisbns"]
 
-	skipfirst = config.getboolean(service, "SkipFirstChapter", fallback=False)
+	skipfirst = configfile.getboolean(service, "SkipFirstChapter", fallback=False)
 	progress(0, "Searching for book index")
-	if config.getboolean(service, "SearchIndex", fallback=False) and data["format"] != "booktab":
+	if configfile.getboolean(service, "SearchIndex", fallback=False) and data["format"] != "booktab":
 		for isbn in relatedisbns + [bookid]:
 			indice = getadditional(isbn, "_02_IND.pdf")
 			if indice:
 				indicepdf = fitz.Document(stream=indice, filetype="pdf")
 				pdf.insert_pdf(indicepdf)
-				indexname = config.get(service, "IndexName", fallback="Indice")
+				indexname = configfile.get(service, "IndexName", fallback="Indice")
 				toc.append([1, indexname, 1])
 				labels.extend(["Indice"] * len(pdf))
 				break
@@ -368,13 +368,13 @@ def downloadbook(token, bookid, data, progress):
 		pdf, toc, labels = downloadkitaboo(token, bookid, pdf, toc, labels, progress, skipfirst)
 
 	progress(95, "Searching for backcover")
-	if config.getboolean(service, "SearchBackcover", fallback=True):
+	if configfile.getboolean(service, "SearchBackcover", fallback=True):
 		for isbn in relatedisbns + [bookid]:
 			quarta = getadditional(isbn, "_03_ALT.pdf")
 			if quarta:
 				quartapdf = fitz.Document(stream=quarta,filetype="pdf")
 				pdf.insert_pdf(quartapdf)
-				backcovername = config.get(service, "BackcoverName", fallback="Copertina")
+				backcovername = configfile.get(service, "BackcoverName", fallback="Copertina")
 				toc.append([1, backcovername, len(pdf)])
 				labels.extend(["C" + str(i + 3) for i in range(len(quartapdf))])
 				break
