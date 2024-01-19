@@ -66,7 +66,7 @@ def downloadoneshot(servicename, url, progress):
 	pdfpath = Path("files") / servicename / (f"{bookid}.pdf")
 	checkpath(pdfpath)
 
-	pdfnow = fitz.utils.get_pdf_now()
+	pdfnow = fitz.get_pdf_now()
 
 	author = config.get(servicename, "Author", fallback="none")
 
