@@ -225,7 +225,8 @@ def downloadhtml5(token, data, progress):
 
 				progress(48 + ((len(pdf) / totnum) * 50), f"Rendering page {len(pdf)}/{totnum}")
 				bpage.goto(pagefile.as_uri())
-				#width, height = str(float(page["width"]) / 144) + "in", str(float(page["height"]) / 144) + "in"
+				if configfile.getboolean(service, "SelectableTextHack", fallback=True):
+					bpage.locator(".textLayer > span").evaluate_all("elements => elements.forEach((i) => i.style.color = '#00000001');")
 				width, height = str(float(page["width"])) + "px", str(float(page["height"])) + "px"
 				pdfpagebytes = bpage.pdf(print_background=True, width=width, height=height, page_ranges="1")
 				pagepdf = fitz.Document(stream=pdfpagebytes, filetype="pdf")
