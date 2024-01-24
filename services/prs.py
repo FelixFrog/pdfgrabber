@@ -11,10 +11,12 @@ from base64 import b64encode, b64decode
 from zipfile import ZipFile
 from pathlib import Path
 from io import BytesIO
-import xml.etree.ElementTree as et
+#import xml.etree.ElementTree as et
+from lxml import etree as et
 import requests
 import string
 import random
+import config
 import time
 import json
 import fitz
@@ -31,6 +33,8 @@ appid = "54c89f6c1d650fdeccbef5cd"
 tenantid = "0a0e20af-1ef3-4650-8f44-48c3bc5f9584"
 tenantkey = "9edbf937-3955-4c98-a698-07718a6380df"
 rpluszipkey = "sDkjhfkj8yhn8gig"
+
+configfile = config.getconfig()
 
 def getetexttoken(username, password, clientid):
 	r = requests.post("https://login.pearson.com/v1/piapi/login/webcredentials", data={"password": password, "isMobile": "true", "grant_type": "password", "client_id": clientid, "username": username}, headers={"User-Agent": "mobile_app"})
@@ -95,6 +99,15 @@ def downloadfile(url, progress, total, done, cdntoken=""):
 		file += data
 		progress(round(done + len(file) / length * total))
 	return file
+
+def downloadfile_ondisk(url, progress, total, done, file, cdntoken=""):
+	r = requests.get(url, headers={"etext-cdn-token": cdntoken} if cdntoken else {}, stream=True)
+	length = int(r.headers.get("content-length", 1))
+	downloaded = 0
+	for data in r.iter_content(chunk_size=102400):
+		file.write(data)
+		downloaded += len(data)
+		progress(round(done + downloaded / length * total))
 
 def downloadfile_nostream(url, cdntoken):
 	r = requests.get(url, headers={"etext-cdn-token": cdntoken})
@@ -209,7 +222,7 @@ def login(username, password, rplus=True):
 
 	return "|".join([etexttoken, etextuserid, rplustoken, rplususerid, logindata["data"]["refresh_token"]])
 
-def library(token, rplus=True):
+def library(token):
 	etexttoken, etextuserid, rplustoken, rplususerid, refreshtoken = tuple(token.split("|"))
 	books = {}
 	bookshelf = getbookshelf(etexttoken, rplustoken, rplususerid)
@@ -223,44 +236,47 @@ def library(token, rplus=True):
 					continue
 			except ValueError:
 				pass
-		books[str(i["book_id"])] = {"title": i["book_title"], "cover": i["cover_image_url"], "isbn": i["isbn"], "type": i["product_model"], "prodid": i["product_id"], "author": i["author"], "entitlementsource": i["entitlement_source"], "rplus": rplus, "pwd": i.get("encrypted_password"), "url": i.get("downloadUrl")}
+		books[str(i["book_id"])] = {"title": i["book_title"], "cover": i["cover_image_url"], "isbn": i["isbn"], "type": i["product_model"], "prodid": i["product_id"], "author": i["author"], "entitlementsource": i["entitlement_source"], "pwd": i.get("encrypted_password"), "url": i.get("downloadUrl")}
+		if configfile.getboolean(service, "ShowFormat", fallback=False):
+			books[str(i["book_id"])]["title"] = i["product_model"] + " - " + i["book_title"]
 	
 	return books
 
-def downloadetext2cite(token, bookid, data, progress):
+def downloadetextliquid(token, bookid, data, progress):
 	pdf = fitz.Document()
 	toc = []
 
 	progress(2, "Computing key")
 	key, bookinfo = computefinalkey(token, bookid, data)
 
-	progress(7, "Downloading zip")
-	if "packageUrl" in bookinfo and "securedKey" in bookinfo:
-		basezip = downloadfile(bookinfo["packageUrl"], progress, 46, 7, bookinfo["cdnToken"])
-	elif "alternateUrl" in bookinfo:
-		basezip = downloadfile_nostream(bookinfo["alternateUrl"], bookinfo["cdnToken"])
-
-	reszip = ZipFile(BytesIO(basezip))
-
 	structure = getbooktoc(token, data["prodid"], False, True)
 
-	margin = "0.4in"
-	def parsestructure(children, pdf, page, level, basedir):
-		for i in children:
-			if i["type"] == "chapter":
-				toc.append([level, i["title"].strip(), len(pdf) + 1])
-				parsestructure(i["children"], pdf, page, level + 1, basedir)
-			elif i["type"] == "slate":
-				toc.append([level, i["title"].strip(), len(pdf) + 1])
-				page.goto((basedir / i["uri"]).as_uri())
-				#advancement = (j + 1) / len(pages) * 62 + 36
-				#progress(advancement, f"Printing {j + 1}/{len(pages)}")
-				pdfpagebytes = page.pdf(print_background=True, margin={"top": margin, "right": margin, "bottom": margin, "left": margin})
-				pagepdf = fitz.Document(stream=pdfpagebytes, filetype="pdf")
-				pdf.insert_pdf(pagepdf)
+	def parsestructure(structure, level=1, pages=[]):
+		for i in structure.get("children", []):
+			if i["type"] in ["chapter", "module", "slate"]:
+				toc.append([level, i["title"].strip(), len(pages)])
+				if i.get("uri"):
+					pages.append(i["uri"])
+			pages = parsestructure(i, level + 1, pages)
+		return pages
 
-	with TemporaryDirectory(prefix="etext2cite.", ignore_cleanup_errors=True) as tmpdirfull:
+	pages = parsestructure(structure)
+	lengths = []
+
+	margin = configfile.get(service, "MarginLiquidBooks", fallback="0.4in")
+	papersize = configfile.get(service, "PaperSizeLiquidBooks", fallback="A4")
+
+	with TemporaryDirectory(prefix="etextepubbronte.", ignore_cleanup_errors=True) as tmpdirfull:
 		tmpdir = Path(tmpdirfull)
+
+		progress(4, "Downloading zip")
+		if "packageUrl" in bookinfo and "securedKey" in bookinfo:
+			downloadfile_ondisk(bookinfo["packageUrl"], progress, 42, 4, open(tmpdir / "base.zip", "wb"), bookinfo["cdnToken"])
+			reszip = ZipFile(tmpdir / "base.zip", "r")
+		elif "alternateUrl" in bookinfo:
+			basezip = downloadfile_nostream(bookinfo["alternateUrl"], bookinfo["cdnToken"])
+			reszip = ZipFile(BytesIO(basezip))
+
 		progress(46, "Extracting")
 		for file in reszip.namelist():
 			if file.endswith(".bin"):
@@ -271,11 +287,30 @@ def downloadetext2cite(token, bookid, data, progress):
 			else:
 				reszip.extract(file, tmpdir)
 
+		(tmpdir / "base.zip").unlink(missing_ok=True)
+
+		added = []
 		with sync_playwright() as p:
 			browser = p.chromium.launch()
-			page = browser.new_page()
-			parsestructure(structure["children"], pdf, page, 1, tmpdir)
+			bpage = browser.new_page()
+			for j, page in enumerate(pages):
+				advancement = ((j + 1) / len(pages)) * 50 + 48
+				progress(advancement, f"Printing {j + 1}/{len(pages)}")
+
+				pagepath = tmpdir / page
+				if page in added or not pagepath.is_file():
+					lengths.append(0)
+					continue
+				bpage.goto(pagepath.as_uri())
+				pdfpagebytes = bpage.pdf(print_background=True, margin={"top": margin, "right": margin, "bottom": margin, "left": margin}, format=papersize)
+				pagepdf = fitz.Document(stream=pdfpagebytes, filetype="pdf")
+				lengths.append(len(pagepdf))
+				added.append(page)
+				pdf.insert_pdf(pagepdf)
 			browser.close()
+
+	for i in toc:
+		i[2] = 1 + sum(lengths[:i[2]])
 
 	progress(98, "Applying toc")
 	pdf.set_toc(toc)
@@ -292,7 +327,7 @@ def computefinalkey(token, bookid, data):
 
 	return key, bookinfo
 
-def downloadetextbook(token, bookid, data, progress):
+def downloadetextpdf(token, bookid, data, progress):
 	progress(2, "Computing key")
 	key, bookinfo = computefinalkey(token, bookid, data)
 
@@ -342,14 +377,15 @@ def downloadrpluspdf(url, password, progress):
 
 def gentoc(item, level, pages, basedir):
 	toc = []
-	for li in item.findall("{http://www.w3.org/1999/xhtml}li"):
-		ref = li.find("{http://www.w3.org/1999/xhtml}a")
+	for li in item.findall("{*}li"):
+		ref = li.find("{*}a")
 		text, href = ref.text, ref.get("href")
 		if href.startswith("https://") or href.startswith("http://") or not href:
 			continue
 		href = (basedir / href.split("#")[0]).resolve()
 		toc.append([level, text, pages.index(href) + 1])
-		if sub := li.find("{http://www.w3.org/1999/xhtml}ol"):
+		sub = li.find("{*}ol")
+		if sub is not None:
 			toc.extend(gentoc(sub, level + 1, pages, basedir))
 	return toc
 
@@ -357,41 +393,46 @@ def downloadrplusepub(url, password, progress):
 	pdf = fitz.Document()
 	toc, labels, pages = [], [], []
 
-	progress(2, "Downloading zip")
-	bookzip = ZipFile(BytesIO(downloadfile(url, progress, 20, 2)))
 	finalpassword = zippassword(password)
 
 	with TemporaryDirectory(prefix="rplusepub.", ignore_cleanup_errors=True) as tmpdirfull:
 		tmpdir = Path(tmpdirfull)
-		ns = {"xhtml": "http://www.w3.org/1999/xhtml", "ops": "http://www.idpf.org/2007/ops", "opf": "http://www.idpf.org/2007/opf"}
+
+		progress(2, "Downloading zip")
+		downloadfile_ondisk(url, progress, 20, 2, open(tmpdir / "base.zip", "wb"))
+		
 		progress(24, "Extracting zip")
+		bookzip = ZipFile(tmpdir / "base.zip", "r")
 		epubpath = next(i for i in bookzip.namelist() if i.endswith(".epub"))
+		
 		bookzip.extract(epubpath, tmpdir, pwd=finalpassword)
-		del bookzip
-		epubzip = ZipFile(tmpdir / Path(epubpath))
+		(tmpdir / "base.zip").unlink(missing_ok=True)
+		
+		epubzip = ZipFile(tmpdir / epubpath, "r")
 
 		progress(31, "Extracting epub")
 		epubzip.extractall(tmpdir)
-		info = et.fromstring(open(tmpdir / "META-INF" / "container.xml", "r", encoding="utf-8-sig").read())
-		contentspath = tmpdir / info.find("{urn:oasis:names:tc:opendocument:xmlns:container}rootfiles").find("{urn:oasis:names:tc:opendocument:xmlns:container}rootfile").get("full-path")
-		contents = et.fromstring(open(contentspath, "r", encoding="utf-8-sig").read())
+		(tmpdir / epubpath).unlink(missing_ok=True)
 
-		files = {i.get("id"): i.attrib for i in contents.find("opf:manifest", ns).findall("opf:item", ns)}
-		spine = contents.find("opf:spine", ns)
-		pages = [(contentspath.parent / files[i.get("idref")]["href"]).resolve() for i in spine.findall("opf:itemref", ns)]
+		info = et.parse(open(tmpdir / "META-INF" / "container.xml", "r", encoding="utf-8-sig")).getroot()
+		contentspath = tmpdir / info.find("{*}rootfiles").find("{*}rootfile").get("full-path")
+		contents = et.parse(open(contentspath, "r", encoding="utf-8-sig")).getroot()
+
+		#ns = {"xhtml": "http://www.w3.org/1999/xhtml", "ops": "http://www.idpf.org/2007/ops", "opf": "http://www.idpf.org/2007/opf"}
+		files = {i.get("id"): i.attrib for i in contents.find("{*}manifest").findall("{*}item")}
+		spine = contents.find("{*}spine")
+		pages = [(contentspath.parent / files[i.get("idref")]["href"]).resolve() for i in spine.findall("{*}itemref")]
 		navpath = contentspath.parent / next(i["href"] for i in files.values() if i.get("properties") == "nav")
 		
-		tocfile = et.fromstring(open(navpath, "r", encoding="utf-8-sig").read())
+		tocfile = et.parse(open(navpath, "r", encoding="utf-8-sig")).getroot()
 
-		tocitem = [i for i in tocfile.find("xhtml:body", ns).findall("xhtml:nav", ns) if i.get("{http://www.idpf.org/2007/ops}type") == "toc"]
-		if tocitem:
-			print("Your book doesn't have a table of contents!")
-			toc.extend(gentoc(tocitem[0].find("xhtml:ol", ns), 1, pages, navpath.parent))
+		tocitem = next(i for i in tocfile.find("{*}body").findall("{*}nav") if i.get("{http://www.idpf.org/2007/ops}type") == "toc")
+		toc.extend(gentoc(tocitem.find("{*}ol"), 1, pages, navpath.parent))
 
-		pagelistitem = next(i for i in tocfile.find("xhtml:body", ns).findall("xhtml:nav", ns) if i.get("{http://www.idpf.org/2007/ops}type") == "page-list")
+		pagelistitem = next(i for i in tocfile.find("{*}body").findall("{*}nav") if i.get("{http://www.idpf.org/2007/ops}type") == "page-list")
 		labelsdict = {}
-		for i in pagelistitem.find("xhtml:ol", ns).findall("xhtml:li", ns):
-			ref = i.find("xhtml:a", ns)
+		for i in pagelistitem.find("{*}ol").findall("{*}li"):
+			ref = i.find("{*}a")
 			labelsdict[(navpath.parent / ref.get("href")).resolve()] = ref.text
 
 		with sync_playwright() as p:
@@ -424,13 +465,13 @@ def downloadbook(token, bookid, data, progress):
 
 	match data["type"]:
 		case "ETEXT_PDF":
-			pdf = downloadetextbook(etexttoken, bookid, data, progress)
+			pdf = downloadetextpdf(etexttoken, bookid, data, progress)
 		case "RPLUS_PDF":
 			pdf = downloadrpluspdf(data["url"], data["pwd"], progress)
 		case "RPLUS_EPUB":
 			pdf = downloadrplusepub(data["url"], data["pwd"], progress)
-		case "ETEXT2_CITE":
-			pdf = downloadetext2cite(etexttoken, bookid, data, progress)
+		case "ETEXT2_CITE" | "ETEXT_EPUB_BRONTE":
+			pdf = downloadetextliquid(etexttoken, bookid, data, progress)
 		case _:
 			print(f"Unsupported format {data['type']}! Contact the developer to get it added!")
 			exit()
