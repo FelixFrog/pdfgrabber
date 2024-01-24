@@ -287,7 +287,7 @@ def downloadetextliquid(token, bookid, data, progress):
 			else:
 				reszip.extract(file, tmpdir)
 
-		(tmpdir / "base.zip").unlink(missing_ok=True)
+		#(tmpdir / "base.zip").unlink(missing_ok=True)
 
 		added = []
 		with sync_playwright() as p:
@@ -406,13 +406,13 @@ def downloadrplusepub(url, password, progress):
 		epubpath = next(i for i in bookzip.namelist() if i.endswith(".epub"))
 		
 		bookzip.extract(epubpath, tmpdir, pwd=finalpassword)
-		(tmpdir / "base.zip").unlink(missing_ok=True)
+		#(tmpdir / "base.zip").unlink(missing_ok=True)
 		
 		epubzip = ZipFile(tmpdir / epubpath, "r")
 
 		progress(31, "Extracting epub")
 		epubzip.extractall(tmpdir)
-		(tmpdir / epubpath).unlink(missing_ok=True)
+		#(tmpdir / epubpath).unlink(missing_ok=True)
 
 		info = et.parse(open(tmpdir / "META-INF" / "container.xml", "r", encoding="utf-8-sig")).getroot()
 		contentspath = tmpdir / info.find("{*}rootfiles").find("{*}rootfile").get("full-path")
