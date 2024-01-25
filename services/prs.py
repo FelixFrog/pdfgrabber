@@ -263,8 +263,14 @@ def downloadetextliquid(token, bookid, data, progress):
 	pages = parsestructure(structure)
 	lengths = []
 
-	margin = configfile.get(service, "MarginLiquidBooks", fallback="0.4in")
+	margin = configfile.get(service, "MarginLiquidBooks", fallback="1cm")
 	papersize = configfile.get(service, "PaperSizeLiquidBooks", fallback="A4")
+	scale = configfile.get(service, "RenderScaleLiquidBooks", fallback="0.7")
+	try:
+		scale = float(scale)
+	except ValueError:
+		print("Invalid RenderScaleLiquidBooks in your config.ini, using default value of 0.7")
+		scale = 0.7
 
 	with TemporaryDirectory(prefix="etextepubbronte.", ignore_cleanup_errors=True) as tmpdirfull:
 		tmpdir = Path(tmpdirfull)
@@ -302,7 +308,7 @@ def downloadetextliquid(token, bookid, data, progress):
 					lengths.append(0)
 					continue
 				bpage.goto(pagepath.as_uri())
-				pdfpagebytes = bpage.pdf(print_background=True, margin={"top": margin, "right": margin, "bottom": margin, "left": margin}, format=papersize)
+				pdfpagebytes = bpage.pdf(print_background=True, margin={"top": margin, "right": "0px", "bottom": margin, "left": "0px"}, format=papersize, scale=scale)
 				pagepdf = fitz.Document(stream=pdfpagebytes, filetype="pdf")
 				lengths.append(len(pagepdf))
 				added.append(page)
