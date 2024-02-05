@@ -24,7 +24,7 @@ xorprivatekey = "VJTP4zAVsLlrpNXXTGV981Tn7zCew0MHD+VkofkRMPcLjLB+w0N/zj02HzPs/4a
 configfile = config.getconfig()
 
 def getlogindata(username, password):
-	logindata = {"username": username, "password": password, "device_id": get_random_bytes(8).hex(), "device_name": "iPhone Grosso (tm)", "dry_run": False}
+	logindata = {"username": username, "password": password, "device_id": get_random_bytes(8).hex(), "device_name": "iPad", "dry_run": False}
 	r = requests.post("https://booktab-fast-api.zanichelli.it/api/v5/sessions", json=logindata)
 	return r.json()
 
@@ -33,15 +33,15 @@ def getmetadata():
 	return r.json()
 
 def getlibrary(token):
-	r = requests.get("https://booktab-fast-api.zanichelli.it/api/v5/books", headers={"Authorization": "Bearer " + token})
+	r = requests.get("https://booktab-fast-api.zanichelli.it/api/v5/books", headers={"Authorization": f"Bearer {token}"})
 	return r.json()
 
 def getmanifest(token, isbn):
-	r = requests.get("https://booktab-main-api.zanichelli.it/api/v5/books/" + isbn + "/resource/manifest.log", headers={"Authorization": "Bearer " + token})
+	r = requests.get(f"https://booktab-main-api.zanichelli.it/api/v5/books/{isbn}/resource/manifest.log", headers={"Authorization": f"Bearer {token}"})
 	return r.json()
 
 def downloadresource(token, isbn, path, progress=False, total=0, done=0):
-	r = requests.get("https://booktab-main-api.zanichelli.it/api/v5/books/" + isbn + "/resource/" + path, headers={"Authorization": "Bearer " + token}, stream=progress)
+	r = requests.get(f"https://booktab-main-api.zanichelli.it/api/v5/books/{isbn}/resource/{path}", headers={"Authorization": f"Bearer {token}"}, stream=progress)
 	if progress:
 		length = int(r.headers.get("content-length", 1))
 		file = b""
@@ -57,11 +57,11 @@ def cover(token, bookid, data):
 	return r.content
 
 def checktoken(token):
-	r = requests.get("https://booktab-fast-api.zanichelli.it/api/v5/users/me", headers={"Authorization": "Bearer " + token})
+	r = requests.get("https://booktab-fast-api.zanichelli.it/api/v5/users/me", headers={"Authorization": f"Bearer {token}"})
 	return bool(r.content)
 
 def getadditional(bookid, extratype):
-	r = requests.get("https://staticmy.zanichelli.it/catalogo/assets/" + bookid + extratype)
+	r = requests.get(f"https://staticmy.zanichelli.it/catalogo/assets/{bookid}{extratype}")
 	if r.status_code == 200:
 		return r.content
 
