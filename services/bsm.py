@@ -85,8 +85,12 @@ def library(token, baseurl=bsmart_baseurl, service=service):
 
 def downloadbook(token, bookid, data, progress, baseurl=bsmart_baseurl):
 	revision = data["revision"]
-	progress(0, "Getting resources")
+
+	progress(1, "Getting resources")
 	resources = getbookinfo(token, bookid, revision, "resources", baseurl)
+	assetpacks = getbookinfo(token, bookid, revision, "asset_packs", baseurl)
+	index = getbookinfo(token, bookid, revision, "index", baseurl)
+
 	resmd5 = {}
 	for i in resources:
 		if i["resource_type_id"] != 14:
@@ -96,26 +100,24 @@ def downloadbook(token, bookid, data, progress, baseurl=bsmart_baseurl):
 
 
 	pagespdf, labelsmap = {}, {}
-	progress(5, "Fetching asset packs")
-	assetpacks = getbookinfo(token, bookid, revision, "asset_packs", baseurl)
 
-	progress(10, "Downloading pdf pages")
-	pagespack = downloadpack(next(i["url"] for i in assetpacks if i["label"] == "page_pdf"), progress, 80, 10)
+	progress(3, "Downloading pdf")
+	pagespack = downloadpack(next(i["url"] for i in assetpacks if i["label"] == "page_pdf"), progress, 90, 3)
 
-	progress(90, "Decrypting pages")
+	progress(93, "Decrypting pages")
 	for member in pagespack.getmembers():
 		file = pagespack.extractfile(member)
 		if file:
 			output, md5 = decryptfile(file)
+			if md5 not in resmd5:
+				print("Broken book! Unknown page found in the asset pack!")
+				continue
 			pid, label = resmd5[md5]
 			pagespdf[pid] = output
 			labelsmap[pid] = label
 
 	pdf = fitz.Document()
 	toc, labels = [], []
-
-	progress(95, "Obtaining toc")
-	index = getbookinfo(token, bookid, revision, "index", baseurl)
 
 	bookmarks = {i["first_page"]["id"]:i["title"] for i in index if "first_page" in i}
 	for i, (pageid, pagepdfraw) in enumerate(sorted(pagespdf.items())):
