@@ -272,7 +272,7 @@ def downloadetextliquid(token, bookid, data, progress):
 		print("Invalid RenderScaleLiquidBooks in your config.ini, using default value of 0.7")
 		scale = 0.7
 
-	with TemporaryDirectory(prefix="etextepubbronte.", ignore_cleanup_errors=True) as tmpdirfull:
+	with TemporaryDirectory(prefix="etextliquidbook.", ignore_cleanup_errors=True) as tmpdirfull:
 		tmpdir = Path(tmpdirfull)
 
 		progress(4, "Downloading zip")
@@ -476,7 +476,7 @@ def downloadbook(token, bookid, data, progress):
 			pdf = downloadrpluspdf(data["url"], data["pwd"], progress)
 		case "RPLUS_EPUB":
 			pdf = downloadrplusepub(data["url"], data["pwd"], progress)
-		case "ETEXT2_CITE" | "ETEXT_EPUB_BRONTE":
+		case "ETEXT2_CITE" | "ETEXT_EPUB_BRONTE" | "ETEXT2_PXE":
 			pdf = downloadetextliquid(etexttoken, bookid, data, progress)
 		case _:
 			print(f"Unsupported format {data['type']}! Contact the developer to get it added!")
