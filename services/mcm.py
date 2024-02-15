@@ -2,10 +2,9 @@ import requests
 from Crypto.Cipher import DES3
 from Crypto.Util.Padding import unpad
 from io import BytesIO
-import zipfile
+from zipfile import ZipFile
 import json
 from base64 import b64decode, b64encode
-import umsgpack
 import fitz
 
 service = "mcm"
@@ -19,12 +18,12 @@ def getlogindata(username, password, baseurl):
 	r = requests.get(baseurl + "/LMS/login.php", params={"email": username, "contrasena": password})
 	return r.json()
 
-def getbaseres(token, baseurl, raw=False):
+def getbaseres(token, baseurl):
 	r = requests.get(baseurl + "/LMS/downloaderPlus.php", params={"IDSESSIONDIRECT": token, "op": "getdiff", "last_update": 0, "synchromode": 1})
-	if raw:
-		return r.text
-	else:
+	if r.status_code == 200:
 		return r.json()
+	else:
+		return None
 
 def getbookzips(token, bookid, baseurl):
 	r = requests.get(baseurl + "/LMS/downloaderPlus.php", params={"IDSESSIONDIRECT": token, "op": "getdiff", "last_update": 0, "elemid": bookid, "elem": "course", "synchromode": 2, "device": "androidapp"})
@@ -39,19 +38,19 @@ def downloadzip(url, progress=False, total=0, done=0):
 		for data in r.iter_content(chunk_size=102400):
 			file += data
 			progress(round(done + len(file) / length * total))
-		return zipfile.ZipFile(BytesIO(file), "r")
+		return file
 	else:
-		return zipfile.ZipFile(BytesIO(r.content), "r")
+		return r.content
 
-def getcover(path, baseurl):
+def getresource(path, baseurl):
 	r = requests.get(baseurl + path)
 	return r.content
 
 def cover(token, bookid, data, baseurl=macmillan_baseurl):
-	return getcover(data["cover"], baseurl)
+	return getresource(data["cover"], baseurl)
 
 def checktoken(token, baseurl=macmillan_baseurl):
-	baseres = getbaseres(token, baseurl, True)
+	baseres = getbaseres(token, baseurl)
 	return bool(baseres)
 
 def decryptfile(file, key):
@@ -72,18 +71,23 @@ def login(username, password, baseurl=macmillan_baseurl):
 		#print("Expires "  + str(int(time.mktime(time.strptime(logindata["mode_expiration"], "%Y%m%d%H%M%S")))))
 		return logindata["userToken"]
 
+def identifyuserzip(token, baseres, baseurl):
+	url = next(i["url"] for i in baseres["zips"] if "tmp" in i["url"])
+	userzip = ZipFile(BytesIO(downloadzip(url)))
+
+	return userzip
+
 def library(token, baseurl=macmillan_baseurl):
 	baseres = getbaseres(token, baseurl)
 
-	url = next(i["url"] for i in baseres["zips"] if "tmp" in i["url"])
 	ids = [i["id"] for i in baseres["elements"]["courses"]]
 
-	userzip = downloadzip(url)
+	userzip = identifyuserzip(token, baseres, baseurl)
 
 	books = dict()
 	for cid in ids:
 		coursejson = json.load(userzip.open("coursePlayer/curso_json_idcurso_" + cid + ".htm"))
-		books[str(cid)] = {"title": coursejson["title"], "toc": b64encode(umsgpack.packb(coursejson["units"])).decode(), "cover": coursejson["image"]}
+		books[str(cid)] = {"title": coursejson["title"], "cover": coursejson["image"], "isbn": coursejson["isbn"].replace("-", "")}
 	
 	return books
 
@@ -91,7 +95,9 @@ def downloadbook(token, bookid, data, progress, baseurl=macmillan_baseurl):
 	progress(0, "Getting book zips")
 	bookzips = getbookzips(token, bookid, baseurl)
 
-	units = umsgpack.unpackb(b64decode(data["toc"]))
+	userzip = identifyuserzip(token, getbaseres(token, baseurl), baseurl)
+
+	courseinfo = json.load(userzip.open("coursePlayer/curso_json_idcurso_" + bookid + ".htm"))
 
 	files = dict()
 	todownload = [i for i in bookzips["zips"] if "common" not in i["url"]]
@@ -99,7 +105,7 @@ def downloadbook(token, bookid, data, progress, baseurl=macmillan_baseurl):
 	for i, file in enumerate(todownload):
 		zipstart = 5 + i * width
 		progress(zipstart, f"Downloading zip {i + 1}/{len(todownload)}")
-		czip = downloadzip(file["url"], progress, width, zipstart)
+		czip = ZipFile(BytesIO(downloadzip(file["url"], progress, width, zipstart)))
 		if file["key"]:
 			for i in czip.namelist():
 				if not i.endswith("/"):
@@ -107,20 +113,21 @@ def downloadbook(token, bookid, data, progress, baseurl=macmillan_baseurl):
 
 	pdf = fitz.Document()
 	toc = []
-	pcount = 1
 
 	progress(92, "Appending units")
-	for unit in units:
-		toc.append([1, unit["title"], pcount])
+	for unit in courseinfo["units"]:
+		#toc.append([1, unit["title"], len(pdf) + 1])
 		for subunit in unit["subunits"]:
-			if subunit["type"] != "libro":
+			jsonpath = "librodigital_json_abs_1_idclase_" + subunit["id"] + "_idcurso_" + bookid + "_type_json_xdevice_ipadapp.htm"
+			if not jsonpath in files or subunit["type"] != "libro":
 				continue
-			sujson = json.loads(files["librodigital_json_abs_1_idclase_" + subunit["id"] + "_idcurso_" + bookid + "_type_json_xdevice_ipadapp.htm"])
+			sujson = json.loads(files[jsonpath])
 			filename = sujson["pdfUrlOffline"].rpartition("/")[2]
+			if not filename.endswith(".pdf"):
+				continue
 			supdf = fitz.Document(stream=files[filename], filetype="pdf")
+			toc.append([int(subunit["level"]), sujson["title"], len(pdf) + 1])
 			pdf.insert_pdf(supdf)
-			toc.append([2, sujson["title"], pcount])
-			pcount += int(sujson["numPages"])
 
 	progress(98, "Applying toc")
 	pdf.set_toc(toc)
