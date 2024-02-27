@@ -3,7 +3,8 @@ from Crypto.Util.Padding import unpad
 from Crypto.Cipher import AES
 from Crypto.Hash import HMAC, SHA256
 from base64 import b64encode, b64decode
-import xml.etree.ElementTree as ET
+#import xml.etree.ElementTree as et
+from lxml import etree as et
 from zipfile import ZipFile
 from io import BytesIO
 import tempfile
@@ -63,14 +64,17 @@ def getbookinfo(bookid):
 	r = requests.get("https://cms.oxfordlearnersbookshelf.com/api/content_info.php", params={"bid": bookid})
 	return r.json()
 
-def getsignedurl(url):
-	truncatedurl = "/" + "/".join(url.split("/")[3:])
-	time = getmillisnow()
-	h = HMAC.new(signedsecret, digestmod=SHA256)
-	h.update((truncatedurl + time).encode())
-	xauth = h.hexdigest()
+def computexauth(url, secretkey=signedsecret):
+	timemillis = getmillisnow()
+	h = HMAC.new(secretkey, digestmod=SHA256)
+	h.update((url + timemillis).encode())
+	return h.hexdigest(), timemillis
 
-	r = requests.get("https://cms.oxfordlearnersbookshelf.com/api/get-signedurl.php", params={"cdnUrl":url}, headers={"X-Authorization": xauth, "X-Timestamp": time})
+def truncateurl(url):
+	return "/" + "/".join(url.split("/")[3:])
+
+def getsignedurl(url, xauth, timemillis):
+	r = requests.get("https://cms.oxfordlearnersbookshelf.com/api/get-signedurl.php", params={"cdnUrl":url}, headers={"X-Authorization": xauth, "X-Timestamp": timemillis})
 	return r.text
 
 def downloadzip(url, tempfile, progress, total, done):
@@ -147,8 +151,12 @@ def downloadbook(token, bookid, data, progress):
 	book = bookinfo["msg"]["content_list"][0]
 
 	progress(2, "Signing url")
-	cdnurl = getsignedurl(book["zip_download_url"])
+	xauth, timemillis = computexauth(truncateurl(book["zip_download_url"]))
+	signedurl = getsignedurl(book["zip_download_url"], xauth, timemillis)
 
+	return downloadoxfordbook(signedurl, bookid, progress)
+
+def downloadoxfordbook(cdnurl, bookid, progress):
 	with tempfile.TemporaryFile() as tf:
 		progress(4, "Downloading zip")
 		downloadzip(cdnurl, tf, progress, 91, 4)
@@ -168,17 +176,18 @@ def downloadbook(token, bookid, data, progress):
 
 		progress(98, "Applying toc")
 		toc = []
-		tocxml = zipfile.open("info/content.xml").read()
-		tocdecrypted = decryptfile(tocxml, bookid)
-		tocroot = ET.fromstring(tocdecrypted.decode())
-		for i in tocroot.find("TOC").findall("item"):
-			title = i.find("Title").text
-			subtitle = i.find("SubTitle").text
-			page = int(i.find("Page").text)
-			if subtitle: 
-				toc.append([1, title + " - " + subtitle, page])
-			else:
-				toc.append([1, title, page])
-
-	pdf.set_toc(toc)
+		contentxml = zipfile.open("info/content.xml").read()
+		contentxml = decryptfile(contentxml, bookid)
+		content = et.fromstring(contentxml)
+		tocroot = content.find("TOC")
+		if tocroot is not None:
+			for i in tocroot.findall("item"):
+				title = i.find("Title").text
+				subtitle = i.find("SubTitle").text
+				page = int(i.find("Page").text)
+				if subtitle: 
+					toc.append([1, title + " - " + subtitle, page])
+				else:
+					toc.append([1, title, page])
+			pdf.set_toc(toc)
 	return pdf
