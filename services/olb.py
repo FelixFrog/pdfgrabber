@@ -38,19 +38,22 @@ def login(username, password):
 	verifier, challenge = getchallenge()
 
 	s = requests.Session()
-	r = s.get("https://id.oup.com/authorize", params={"response_type":"code","client_id":clientid,"redirect_uri":"https://www.oxfordlearnersbookshelf.com/","state":b64encode(get_random_bytes(8)).decode(),"scope":"openid email profile offline_access","code_challenge":challenge,"code_challenge_method":"S256","audience":"https://prod-oup.eu.auth0.com/api/v2/","providerId":"OLB_MOBILE"})
+	r = s.get("https://id.oup.com/authorize", params={"response_type": "code", "client_id": clientid, "redirect_uri": "https://www.oxfordlearnersbookshelf.com/", "state": b64encode(get_random_bytes(8)).decode(), "scope": "openid email profile offline_access", "code_challenge": challenge, "code_challenge_method": "S256", "audience": "https://prod-oup.eu.auth0.com/api/v2/", "providerId": "OLB_MOBILE"})
 	query = dict([i.split("=") for i in r.url.split("?")[1].split("&")])
 
-	r = s.post("https://id.oup.com/usernamepassword/login", json={"client_id":clientid,"redirect_uri":"https://www.oxfordlearnersbookshelf.com/","tenant":"prod-oup","response_type":"code","scope":"openid email profile offline_access","audience":"https://prod-oup.eu.auth0.com/api/v2/","state":query["state"],"_intstate":"deprecated","username":username,"password":password,"connection":"Self-registered-users"}, headers={"Auth0-Client": "eyJuYW1lIjoiYXV0aDAuanMtdWxwIiwidmVyc2lvbiI6IjkuMTMuNCJ9"})
+	r = s.post("https://id.oup.com/usernamepassword/login", json={"client_id": clientid, "redirect_uri": "https://www.oxfordlearnersbookshelf.com/", "tenant": "prod-oup", "response_type": "code", "scope": "openid email profile offline_access", "audience": "https://prod-oup.eu.auth0.com/api/v2/", "state": query["state"], "_intstate": "deprecated", "username": username, "password": password, "connection": "Self-registered-users"}, headers={"Auth0-Client": "eyJuYW1lIjoiYXV0aDAuanMtdWxwIiwidmVyc2lvbiI6IjkuMTMuNCJ9"})
 	form = dict(re.findall(r"<input(?=.+?type=['\"]hidden['\"])(?=.+?name=['\"](.*?)['\"]).+?value=['\"](.*?)['\"].*?>", r.text, re.S))
 	if "wctx" in form:
 		form["wctx"] = form["wctx"].replace("&#34;", "\"")
 
 	r = s.post("https://id.oup.com/login/callback", data=form)
+	if "?" not in r.url:
+		return
 	query = dict([i.split("=") for i in r.url.split("?")[1].split("&")])
 
 	r = requests.post("https://id.oup.com/oauth/token", json={"client_id": clientid, "code": query["code"], "code_verifier": verifier, "grant_type": "authorization_code", "redirect_uri": "https://www.oxfordlearnersbookshelf.com"})
-	return r.json()["id_token"]
+	tokenreq = r.json()
+	return tokenreq["id_token"] + "|" + tokenreq["refresh_token"]
 
 def getidentity(idtoken):
 	r = requests.post("https://account.oup.com/api/edu/identity", headers={"Authorization": "Bearer " + idtoken}, json={"userId": "null"})
@@ -62,6 +65,10 @@ def getlibrary(identity, idtoken):
 
 def getbookinfo(bookid):
 	r = requests.get("https://cms.oxfordlearnersbookshelf.com/api/content_info.php", params={"bid": bookid})
+	return r.json()
+
+def getrefreshtoken(refreshtoken):
+	r = requests.post("https://id.oup.com/oauth/token", json={"grant_type": "refresh_token", "client_id": clientid, "refresh_token": refreshtoken})
 	return r.json()
 
 def computexauth(url, secretkey=signedsecret):
@@ -85,16 +92,22 @@ def downloadzip(url, tempfile, progress, total, done):
 		tot += tempfile.write(data)
 		progress(round(done + tot / length * total))
 
-def refreshtoken(refreshtoken):
-	r = requests.post("https://id.oup.com/oauth/token", json={"grant_type": "refresh_token", "client_id": clientid, "refresh_token": refreshtoken})
-	return r.json()["access_token"]
+def refreshtoken(token):
+	idtoken, refreshtoken = token.split("|")
+	refresh = getrefreshtoken(refreshtoken)
+	print(refresh)
+	if "error" in refresh:
+		return
+	else:
+		return refresh["id_token"] + "|" # + refresh["refresh_token"]
 
 def getcover(url):
 	r = requests.get(url)
 	return r.content
 
 def checktoken(token):
-	identity = getidentity(token)
+	idtoken, refreshtoken = token.split("|")
+	identity = getidentity(idtoken)
 	return "data" in identity
 
 def decryptfile(data, bid):
@@ -121,9 +134,10 @@ def parsebook(book):
 	return {ids["bid"]: {"title": book["productName"], "isbn": ids["isbn"]}}
 
 def library(token):
-	identity = getidentity(token)
+	idtoken, refreshtoken = token.split("|")
+	identity = getidentity(idtoken)
 
-	library = getlibrary(identity["data"]["user"]["userId"], token)
+	library = getlibrary(identity["data"]["user"]["userId"], idtoken)
 
 	books = dict()
 	for i in library["data"]["licenses"]:
