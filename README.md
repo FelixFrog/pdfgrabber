@@ -19,6 +19,7 @@ This vendor-agnostic script is used to download pdfs (and covers) from different
 | Cambridge GO | yes | yes | big | no | yes | yes | yes | yes | no |
 | Palumbo Editore - Saggi Digitali | yes | yes | average/big | no | no | no | yes | no | no |
 | Cengage Read | yes | yes | enormous (500+ mb) | no | yes | ? | yes | yes | yes | yes |
+| Oxford Reading Club | yes | yes/(depends on vendor) | big | 2 | no | ? | yes | no | no |
 
 Apps that I am aware of but I can't work with beacuse I don't have books:
  - ~~Appbook (might be a shitty html webview)~~
