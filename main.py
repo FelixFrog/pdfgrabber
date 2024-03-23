@@ -1,4 +1,5 @@
 import utils
+import version
 import sys
 import os
 import re
@@ -12,6 +13,9 @@ import config
 
 console = Console()
 userid = False
+version = version.version
+
+console.clear()
 
 config = config.getconfig()
 
@@ -44,6 +48,8 @@ def login():
 	console.print("Logged in!", style="green")
 
 def selectservice(services):
+	console.clear()
+
 	table = Table(title="Available services")
 	table.add_column("Code", style="cyan")
 	table.add_column("Name", style="green")
@@ -66,6 +72,7 @@ def managetokens():
 		token = utils.gettoken(userid, service)
 		table.add_row(service, token[:20] + "..." if len(token or "") > 23 else "")
 
+	console.clear()
 	console.print(table)
 
 	servicenow = Prompt.ask("Choose a service to delete the token from", choices=utils.services.keys())
@@ -75,7 +82,13 @@ def managetokens():
 def downloadbook():
 	global userid
 	if not userid:
-		login()
+		if not len(utils.getusers()) == 0:
+			login()
+		else:
+			console.print('[b]No user was created! Use "r" for creating an user then try again.[/b]')
+			return
+
+	console.clear()
 
 	service = selectservice(utils.services)
 	token = utils.gettoken(userid, service)
@@ -128,11 +141,13 @@ def downloadbook():
 	table.add_column("Title", style="green")
 
 	id2bookid = []
+	booktitles = []
 	downloadcovers = config.getboolean(service, "Cover", fallback=False)
 	for (i, (bid, book)) in enumerate(books.items()):
 		if downloadcovers:
 			coverpath = utils.cover(service, token, bid, book)
 		table.add_row(str(i), bid, book['title'])
+		booktitles.append(book['title'])
 		id2bookid.append(bid)
 
 	console.clear()
@@ -154,6 +169,8 @@ def downloadbook():
 	while not all(map(checknumber, choices)):
 		choices = Prompt.ask("Invalid choice. Try again").split(",")
 
+
+	console.clear()
 	finalchoices = []
 	for i in choices:
 		if "-" in i:
@@ -171,12 +188,14 @@ def downloadbook():
 				else:
 					progress.update(maintask, completed=update)
 
-			pdfpath = utils.downloadbook(service, token, bookid, books[bookid], progressfun)
+			pdfpath = utils.downloadbook(service, token, bookid, books[bookid], progressfun, booktitles[i])
 			progress.update(maintask, description="Done", completed=100)
 
-		console.print(f"[bold green]Done![/bold green] Your book is in {pdfpath}")
+		console.clear()
+		console.print(f"[bold green]Book downloaded![/bold green] Your book is in {pdfpath}")
 
 def downloadoneshot():
+	console.clear()
 	if config.getboolean("pdfgrabber", "OneshotWarning", fallback=True):
 		answer = Confirm.ask("[bold red]Oneshot services are unstable and lead to lower-quality books than normal services (they often have only pictures/unselectable text). Do you wish to continue?[/bold red]", default=False)
 		if not answer:
@@ -240,13 +259,16 @@ def main():
 	showbanner = config.getboolean("pdfgrabber", "ShowBanner", fallback=True)
 	if showbanner:
 		console.print(center(banner), style="green bold", no_wrap=True, highlight=False)
-		console.print(Rule("version 1.0"))
+		console.print(Rule("version " + version))
+		console.print(center("WARNING! Read the disclaimer before using the tool!"), style="red bold italic")
 	else:
 		console.print(Rule("pdfgrabber version 1.0"))
 	
 	while True:
-		action = Prompt.ask("[magenta]What do you want to do?[/magenta] ((r)egister new user, (d)ownload from your libraries, download from a (o)ne-shot link, (l)ogout, manage (t)okens, (v)iew all books, (q)uit)", choices=["r", "d", "o", "l", "t", "v", "q"], default="d")
+		action = Prompt.ask("[magenta]What do you want to do?[/magenta] ((r)egister new user, (d)ownload from your libraries, download from a (o)ne-shot link, (l)ogout, manage (t)okens, (v)iew all books, (q)uit)", default="d")
 		match action:
+			case "v":
+				books()
 			case "r":
 				register()
 			case "d":
@@ -257,8 +279,6 @@ def main():
 				logout()
 			case "t":
 				managetokens()
-			case "v":
-				books()
 			case "q":
 				console.print("Bye!", style="bold green")
 				exit()

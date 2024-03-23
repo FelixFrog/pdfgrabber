@@ -34,9 +34,9 @@ def login(servicename, username, password):
 def checkpath(path):
 	os.makedirs(path.parent, exist_ok=True)
 
-def downloadbook(servicename, token, bookid, data, progress):
+def downloadbook(servicename, token, bookid, data, progress, bookname):
 	service = getservice(servicename)
-	pdfpath = Path("files") / servicename / (f"{bookid}.pdf")
+	pdfpath = Path("files") / servicename / (f"{bookname}.pdf")
 	checkpath(pdfpath)
 	
 	pdf = service.downloadbook(token, bookid, data, progress)
@@ -44,9 +44,9 @@ def downloadbook(servicename, token, bookid, data, progress):
 
 	author = config.get(servicename, "Author", fallback="none")
 
-	metadata = {'producer': "PyMuPDF " + fitz.version[0], 'format': 'PDF 1.7', 'encryption': None, 'author': 'none', 'modDate': pdfnow, 'keywords': 'none', 'title': data["title"], 'creationDate': pdfnow, 'creator': "pdfgrabber1.0", 'subject': 'none'}
+	metadata = {'producer': "PyMuPDF " + fitz.version[0], 'format': 'PDF 1.7', 'encryption': None, 'author': 'none', 'modDate': pdfnow, 'keywords': 'none', 'title': data["title"], 'creationDate': pdfnow, 'creator': "pdfgrabber", 'subject': 'none'}
 	pdf.set_metadata(metadata)
-	progress(99, "Saving pdf")
+	progress(99, "Saving PDF...")
 	if config.getboolean(servicename, "Compress", fallback=False):
 		pdf.save(pdfpath, garbage=config.getint(servicename, "Garbage", fallback=3), clean=config.getboolean(servicename, "Clean", fallback=True), linear=config.getboolean(servicename, "Linearize", fallback=True))
 	else:
