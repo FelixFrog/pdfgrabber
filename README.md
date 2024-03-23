@@ -60,7 +60,7 @@ Apps that I am aware of but I can't work with beacuse I don't have books:
     - press `r`: register a new account
     - choose what to do (it's listed):
        - to download a book: press `d` and follow the instructions.
-       - the output file will be `files/<service>/<id>.pdf`
+       - the output file will be `files/<service>/<book name>.pdf`
 
 # Services that were once supported but now aren't
 ## Zanichelli services
