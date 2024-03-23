@@ -12,7 +12,6 @@ Please contact me on "Issues" if you want to issue a takedown notice.
 
 | service | pdf download | table of contents | pdf size | max logins | page labels | login expire | cover | rendered | refershes tokens | additional information |
 | ------- | :----------: | :---------------: | :------: | :--------: | :---------: | :----------: | :---: | :------: | :--------------: | :--------------------: |
-| Scuolabook | perfect | yes (very small) | excellent | very restrictive | yes | never | yes | no | no | |
 | MyLim | perfect | excellent | excellent | no | not yet/depends on vendor | ? | yes | no | no | |
 | Pearson Reader+ / Pearson+ | perfect/yes | (depends on vendor)/excellent | big | no | yes/depends on vendor/no | ? | yes | sometimes | yes | decryption of zip file takes a lot: contact me if you have found a workaround. |
 | bSmart / HoepliAcademy+ | yes | yes (very small) | very big (100+ mb) | no | yes | ? | yes | no | no | |
@@ -21,7 +20,7 @@ Please contact me on "Issues" if you want to issue a takedown notice.
 | easyeschool | yes | yes (very small) | excellent | no/1token4ever | no | never | yes | no | no | |
 | Oxford Learner’s Bookshelf | yes | yes (small) | very big | ? | not yet/no | ? | yes | no | no | |
 | Laterza diBooK | yes | yes/(depends on vendor) | excellent | ? | not yet/no | ? | yes | no | no | |
-| Raffaello Player | yes | yes (no samples so not sure) | very big | ? | yes | ? | yes | no | no | |
+| Raffaello Player | yes | yes | very big | ? | yes | ? | yes | no | no | |
 | Cambridge GO | yes | yes | big | no | yes | yes | yes | yes | no | |
 | Palumbo Editore - Saggi Digitali | yes | yes | average/big | no | no | no | yes | no | no | |
 | Cengage Read | yes | yes | enormous (500+ mb) | no | yes | ? | yes | yes | yes | |
