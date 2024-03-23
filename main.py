@@ -3,7 +3,6 @@ import version
 import sys
 import os
 import shutil
-from git import Repo
 import subprocess
 import requests
 import re
@@ -200,23 +199,6 @@ def downloadbook():
 		console.clear()
 		console.print(f"[bold green]Book downloaded![/bold green] Your book is in {pdfpath}")
 
-def clone_and_restart(repo_url):
-    local_path = "temp_repo"
-    Repo.clone_from(repo_url, local_path)
-
-
-    current_dir = os.path.dirname(os.path.realpath(__file__))
-    for item in os.listdir(local_path):
-        item_path = os.path.join(local_path, item)
-        if os.path.isdir(item_path):
-            shutil.copytree(item_path, os.path.join(current_dir, item), dirs_exist_ok=True)
-        else:
-            shutil.copy2(item_path, current_dir)
-
-    shutil.rmtree(local_path)
-
-    python = sys.executable
-    subprocess.call([python, "main.py"])
 
 def updates():
 	# replace this url when done
@@ -233,7 +215,7 @@ def updates():
 
 	if latestversion != version:
 		console.print(center('This version is not the most recent one!'), style="yellow bold")
-		console.print(center('Updating from ' + version + ' to ' + latestversion + '...'), style="yellow bold")
+		console.print(center('' + version + ' -> ' + latestversion), style="yellow bold")
 		updated = False
 	else:
 		updated = True
@@ -312,7 +294,7 @@ def main():
 	isUpdated = updates()
 
 	if not isUpdated:
-		clone_and_restart()
+		sys.exit(0)
 	
 	while True:
 		action = Prompt.ask("[magenta]What do you want to do?[/magenta] ((r)egister new user, (d)ownload from your libraries, download from a (o)ne-shot link, (l)ogout, manage (t)okens, (v)iew all books, (q)uit)", default="d")

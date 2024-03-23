@@ -6,4 +6,3 @@ u-msgpack-python
 tinydb
 playwright
 lxml
-gitpython
