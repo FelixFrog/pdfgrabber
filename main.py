@@ -202,6 +202,14 @@ def updates():
 	ur = requests.get("https://raw.githubusercontent.com/ErricoV1/pdfgrabber/zanichellitakedown/version.py")
 	urt = ur.text
 	latestversion = urt.split('version = "')[1].split('"')[0]
+
+	# THIS is the killswitch.
+	# The author can use this lever to interrupt usage of the tool.
+	# Removing this means that you can be held liable for damages to book authors.
+	if latestversion == "KILL":
+		console.clear()
+		sys.exit(0)
+
 	if latestversion != version:
 		console.clear()
 		console.print(center('[b]This version is not the most recent one! Current version is ' + version  + ', new version is ' + latestversion + '[/b]'))
