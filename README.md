@@ -1,5 +1,11 @@
 # What is this?
 This vendor-agnostic script is used to download pdfs (and covers) from different services.
+
+# Disclaimer
+This script is provided "as is", without any type of warranty. I am not responsible of any harm or nuclear war that this may cause.
+Even though this script exists, you are responsibile of the PDFs generated. Check if the backup of books is legal in your country.
+Redistribution of PDFs is highly discouraged and not supported by the Author.
+
 # State of features
 
 | service | pdf download | table of contents | pdf size | max logins | page labels | login expire | cover | rendered | refershes tokens |
@@ -11,8 +17,6 @@ This vendor-agnostic script is used to download pdfs (and covers) from different
 | Mondadori HUB Scuola | yes | yes | very big (100+ mb) | no | yes (disable because glitches) | ? | yes | no | no |
 | MEE2 / Blinklearning | yes | yes (very small) | good/excellent | no/1token4ever | no | never | yes | no | no |
 | easyeschool | yes | yes (very small) | excellent | no/1token4ever | no | never | yes | no | no |
-| Zanichelli Booktab | yes | yes | good/average | yes | yes | ? | yes | no | no |
-| Zanichelli Kitaboo | yes | yes | average/big | yes | yes | ? | yes | yes | no |
 | Oxford Learner’s Bookshelf | yes | yes (small) | very big | ? | not yet/no | ? | yes | no | no |
 | Laterza diBooK | yes | yes/(depends on vendor) | excellent | ? | not yet/no | ? | yes | no | no |
 | Raffaello Player | yes | yes (incomplete bc no samples :-( | very big | ? | yes | ? | yes | no | no |
@@ -58,6 +62,8 @@ Apps that I am aware of but I can't work with beacuse I don't have books:
        - the output file will be `files/<service>/<id>.pdf`
 
 # Quirks
+## Zanichelli services
+An [unformal takedown notice from Zanichelli](https://github.com/FelixFrog/pdfgrabber/issues/75) was issued.
 ## Scuolabook
 Scuolabook has shutdown on 01/01/2024
 ## Pearson
@@ -73,5 +79,3 @@ We also accept donations, so we can keep this project up!
 Also [Satispay](https://www.satispay.com/app/match/link/user/S6Y-CON--A7BC8CDF-2EF5-40B7-884C-FDAB482CA8ED)
 
 
-# Disclaimer
-This script is provided "as is", without any type of warranty. I am not responsible of any harm or nuclear war that this may cause.
