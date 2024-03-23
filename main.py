@@ -203,7 +203,8 @@ def updates():
 	urt = ur.text
 	latestversion = urt.split('version = "')[1].split('"')[0]
 	if latestversion != version:
-		console.print(center('[b]New version available! Version ' + latestversion + ' is now avaliable.[/b]'))
+		console.clear()
+		console.print(center('[b]This version is not the most recent one! Current version is ' + version  + ', new version is ' + latestversion + '[/b]'))
 		updated = False
 	else:
 		updated = True
