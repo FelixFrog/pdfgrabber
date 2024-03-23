@@ -2,6 +2,7 @@ import utils
 import version
 import sys
 import os
+import requests
 import re
 from rich.console import Console
 from rich.table import Table
@@ -59,7 +60,9 @@ def selectservice(services):
 
 	console.print(table)
 
-	return Prompt.ask("Choose a service", choices=services.keys())
+	chosenone = Prompt.ask("Choose a service", choices=services.keys())
+	
+	return chosenone
 
 def managetokens():
 	if not userid:
@@ -194,6 +197,18 @@ def downloadbook():
 		console.clear()
 		console.print(f"[bold green]Book downloaded![/bold green] Your book is in {pdfpath}")
 
+def updates():
+	# replace this url when done
+	ur = requests.get("https://raw.githubusercontent.com/ErricoV1/pdfgrabber/zanichellitakedown/version.py")
+	urt = ur.text
+	latestversion = urt.split('version = "')[1].split('"')[0]
+	if latestversion != version:
+		console.print(center('[b]New version available! Version ' + latestversion + ' is now avaliable.[/b]'))
+		updated = False
+	else:
+		updated = True
+	return updated
+
 def downloadoneshot():
 	console.clear()
 	if config.getboolean("pdfgrabber", "OneshotWarning", fallback=True):
@@ -263,6 +278,11 @@ def main():
 		console.print(center("WARNING! Read the disclaimer before using the tool!"), style="red bold italic")
 	else:
 		console.print(Rule("pdfgrabber version 1.0"))
+
+	isUpdated = updates()
+
+	if not isUpdated:
+		sys.exit(0)
 	
 	while True:
 		action = Prompt.ask("[magenta]What do you want to do?[/magenta] ((r)egister new user, (d)ownload from your libraries, download from a (o)ne-shot link, (l)ogout, manage (t)okens, (v)iew all books, (q)uit)", default="d")
