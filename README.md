@@ -6,6 +6,8 @@ This script is provided "as is", without any type of warranty. I am not responsi
 Even though this script exists, you are responsibile of the PDFs generated. Check if the backup of books is legal in your country.
 Redistribution of PDFs is highly discouraged and not supported by the Author.
 
+Please contact me on "Issues" if you want to issue a takedown notice.
+
 # State of features
 
 | service | pdf download | table of contents | pdf size | max logins | page labels | login expire | cover | rendered | refershes tokens |
