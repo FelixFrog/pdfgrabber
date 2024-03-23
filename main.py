@@ -2,6 +2,9 @@ import utils
 import version
 import sys
 import os
+import shutil
+from git import Repo
+import subprocess
 import requests
 import re
 from rich.console import Console
@@ -197,6 +200,24 @@ def downloadbook():
 		console.clear()
 		console.print(f"[bold green]Book downloaded![/bold green] Your book is in {pdfpath}")
 
+def clone_and_restart(repo_url):
+    local_path = "temp_repo"
+    Repo.clone_from(repo_url, local_path)
+
+
+    current_dir = os.path.dirname(os.path.realpath(__file__))
+    for item in os.listdir(local_path):
+        item_path = os.path.join(local_path, item)
+        if os.path.isdir(item_path):
+            shutil.copytree(item_path, os.path.join(current_dir, item), dirs_exist_ok=True)
+        else:
+            shutil.copy2(item_path, current_dir)
+
+    shutil.rmtree(local_path)
+
+    python = sys.executable
+    subprocess.call([python, "main.py"])
+
 def updates():
 	# replace this url when done
 	ur = requests.get("https://raw.githubusercontent.com/ErricoV1/pdfgrabber/zanichellitakedown/version.py")
@@ -205,14 +226,14 @@ def updates():
 
 	# THIS is the killswitch.
 	# The author can use this lever to interrupt usage of the tool.
-	# Removing this means that you can be held liable for damages to book authors.
+	# Removing this means that you can be held liable for damages to boo authors.
 	if latestversion == "KILL":
-		console.clear()
-		sys.exit(0)
+		console.print(center("Service currently unavailable for unknown reasons."), style="white bold")
+		sys.exit(20)
 
 	if latestversion != version:
-		console.clear()
-		console.print(center('[b]This version is not the most recent one! Current version is ' + version  + ', new version is ' + latestversion + '[/b]'))
+		console.print(center('This version is not the most recent one!'), style="yellow bold")
+		console.print(center('Updating from ' + version + ' to ' + latestversion + '...'), style="yellow bold")
 		updated = False
 	else:
 		updated = True
@@ -286,12 +307,12 @@ def main():
 		console.print(Rule("version " + version))
 		console.print(center("WARNING! Read the disclaimer before using the tool!"), style="red bold italic")
 	else:
-		console.print(Rule("pdfgrabber version 1.0"))
+		console.print(Rule("pdfgrabber version " + version))
 
 	isUpdated = updates()
 
 	if not isUpdated:
-		sys.exit(0)
+		clone_and_restart()
 	
 	while True:
 		action = Prompt.ask("[magenta]What do you want to do?[/magenta] ((r)egister new user, (d)ownload from your libraries, download from a (o)ne-shot link, (l)ogout, manage (t)okens, (v)iew all books, (q)uit)", default="d")
