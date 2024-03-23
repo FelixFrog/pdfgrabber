@@ -21,7 +21,7 @@ Please contact me on "Issues" if you want to issue a takedown notice.
 | easyeschool | yes | yes (very small) | excellent | no/1token4ever | no | never | yes | no | no | |
 | Oxford Learner’s Bookshelf | yes | yes (small) | very big | ? | not yet/no | ? | yes | no | no | |
 | Laterza diBooK | yes | yes/(depends on vendor) | excellent | ? | not yet/no | ? | yes | no | no | |
-| Raffaello Player | yes | yes (incomplete bc no samples :-( | very big | ? | yes | ? | yes | no | no | |
+| Raffaello Player | yes | yes (no samples so not sure) | very big | ? | yes | ? | yes | no | no | |
 | Cambridge GO | yes | yes | big | no | yes | yes | yes | yes | no | |
 | Palumbo Editore - Saggi Digitali | yes | yes | average/big | no | no | no | yes | no | no | |
 | Cengage Read | yes | yes | enormous (500+ mb) | no | yes | ? | yes | yes | yes | |
