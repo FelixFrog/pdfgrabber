@@ -15,6 +15,7 @@ from rich.rule import Rule
 from rich.prompt import Prompt
 from rich.prompt import Confirm
 from rich.progress import Progress
+import tkinter as tk
 import config
 
 console = Console()
@@ -33,6 +34,48 @@ banner = r"""
 /_/   /_____/_/    \__, /_/   \__,_/_.___/_.___/\___/_/
                   /____/
 """
+
+import tkinter as tk
+
+def create_input_window(labels, title):
+    def on_ok_click():
+        input_values.append(entry1.get())
+        input_values.append(entry2.get())
+        message_label.config(text="Close this window to submit this to PDFGrabber.")
+        ok_button.config(state=tk.DISABLED)
+
+
+    window = tk.Tk()
+    window.title(title)
+
+    input_values = []
+
+    label1_text = labels[0] if len(labels) > 0 else "Label 1:"
+    label2_text = labels[1] if len(labels) > 1 else "Label 2:"
+
+    label1 = tk.Label(window, text=label1_text)
+    label1.pack(pady=5)
+
+    entry1 = tk.Entry(window)
+    entry1.pack(pady=5)
+
+    label2 = tk.Label(window, text=label2_text)
+    label2.pack(pady=5)
+
+    entry2 = tk.Entry(window, show="*")
+    entry2.pack(pady=5)
+
+    ok_button = tk.Button(window, text="OK", command=on_ok_click)
+    ok_button.pack(pady=5)
+
+    message_label = tk.Label(window, text="")
+    message_label.pack(pady=5)
+
+    window.mainloop()
+
+    return input_values
+
+
 
 def center(var, space=None):
 	return '\n'.join(' ' * int(space or (os.get_terminal_size().columns - len(var.splitlines()[len(var.splitlines()) // 2])) / 2) + line for line in var.splitlines())
@@ -119,8 +162,14 @@ def downloadbook():
 		if answer:
 			token = Prompt.ask("Paste here your token")
 		else:
-			username = Prompt.ask(f"[b]{servicename}[/b] username")
-			password = Prompt.ask(f"[b]{servicename}[/b] password", password=True)
+			console.print("[b]Insert your credentials in the input box.[/b]")
+			userpassbox = create_input_window([f"{servicename} username", f"{servicename} password"], "Login")
+
+			while len(userpassbox) == 0:
+				userpassbox = create_input_window([f"{servicename} username", f"{servicename} password"], "Login")
+
+			username = userpassbox[0]
+			password = userpassbox[1]
 			token = utils.login(service, username, password)
 			if token:
 				console.print(f"Logged in, your token is [bold green]{token}[/bold green]")
@@ -161,7 +210,7 @@ def downloadbook():
 	console.clear()
 	console.print(table)
 
-	choices = Prompt.ask("Select a book or a comma-separated list of books. You can also use "-" to indicate a section of the list.").split(",")
+	choices = Prompt.ask("Select a book or a comma-separated list of books. You can also use a '-' to indicate a section of the list.").split(",")
 	
 	def checknumber(n):
 		if n.isdigit():

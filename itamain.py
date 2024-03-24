@@ -10,6 +10,7 @@ import main as lase
 import re
 import time
 import ingmain
+import tkinter as tk
 from rich.console import Console
 from rich.table import Table
 from rich.rule import Rule
@@ -34,6 +35,43 @@ banner = r"""
 /_/   /_____/_/    \__, /_/   \__,_/_.___/_.___/\___/_/
                   /____/
 """
+
+def create_input_window(labels, title):
+    def on_ok_click():
+        input_values.append(entry1.get())
+        input_values.append(entry2.get())
+        message_label.config(text="Close this window to submit this to PDFGrabber.")
+        ok_button.config(state=tk.DISABLED)
+
+
+    window = tk.Tk()
+    window.title(title)
+
+    input_values = []
+    label1_text = labels[0] if len(labels) > 0 else "Label 1:"
+    label2_text = labels[1] if len(labels) > 1 else "Label 2:"
+
+    label1 = tk.Label(window, text=label1_text)
+    label1.pack(pady=5)
+
+    entry1 = tk.Entry(window)
+    entry1.pack(pady=5)
+
+    label2 = tk.Label(window, text=label2_text)
+    label2.pack(pady=5)
+
+    entry2 = tk.Entry(window, show="*")
+    entry2.pack(pady=5)
+
+    ok_button = tk.Button(window, text="OK", command=on_ok_click)
+    ok_button.pack(pady=5)
+
+    message_label = tk.Label(window, text="")
+    message_label.pack(pady=5)
+
+    window.mainloop()
+
+    return input_values
 
 def center(var, space=None):
 	return '\n'.join(' ' * int(space or (os.get_terminal_size().columns - len(var.splitlines()[len(var.splitlines()) // 2])) / 2) + line for line in var.splitlines())
@@ -120,8 +158,13 @@ def downloadbook():
 		if answer:
 			token = Prompt.ask("Incolla qui il tuo token")
 		else:
-			username = Prompt.ask(f"Username di [b]{servicename}[/b]")
-			password = Prompt.ask(f"Password per [b]{servicename}[/b]", password=True)
+			userpassbox = create_input_window([f"Username per {servicename}", f"Password per {servicename} "], "Login")
+
+			while len(userpassbox) == 0:
+				userpassbox = create_input_window([f"Username per {servicename}", f"Password per {servicename}"], "Login")
+
+			username = userpassbox[0]
+			password = userpassbox[1]
 			token = utils.login(service, username, password)
 			if token:
 				console.print(f"Login effettuato, il tuo token è  [bold green]{token}[/bold green]")
