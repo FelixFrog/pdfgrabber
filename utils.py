@@ -1,6 +1,7 @@
 import importlib
 import fitz
 from tinydb import TinyDB, Query
+from rich.console import Console
 from hashlib import sha256
 from pathlib import Path
 import os
@@ -127,24 +128,31 @@ def geturlmatch(servicename):
 	return service.urlmatch
 
 def deletetoken(service, userid):
-	tokentable.remove((Query().service == service) & (Query().owner == userid))
+	if userid != 1:
+		tokentable.remove((Query().service == service) & (Query().owner == userid))
 
 def gettoken(userid, service=""):
-	if service:
-		if service in nologin:
-			return "dummy"
-		token = tokentable.get((Query().owner == userid) & (Query().service == service))
-		if token:
-			return token["value"]
-	else:
-		return tokentable.search(Query().owner == userid)
+	if userid != 1:
+		if service:
+			if service in nologin:
+				return "dummy"
+			token = tokentable.get((Query().owner == userid) & (Query().service == service))
+			if token:
+				return token["value"]
+		else:
+			return tokentable.search(Query().owner == userid)
 
 def register(username, password):
 	passwordhash = sha256(password.encode()).hexdigest()
 	return usertable.insert({"name": username, "password": passwordhash})
 
 def delete(userid):
-	usertable.remove(doc_id=userid)
+	if userid != 1:
+		usertable.remove(doc_id=userid)
 
 def addtoken(userid, servicename, token):
-	tokentable.upsert({"owner": userid, "service": servicename, "value": token}, (Query().owner == userid) & (Query().service == servicename))
+	if userid != 1:
+		tokentable.upsert({"owner": userid, "service": servicename, "value": token}, (Query().owner == userid) & (Query().service == servicename))
+
+if len(getusers()) == 0:
+	register("anonymous","anonymous")
