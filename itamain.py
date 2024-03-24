@@ -1,11 +1,14 @@
 import utils
 import version
 import sys
+import time
 import os
 import shutil
 import subprocess
 import requests
+import main as lase
 import re
+import time
 import ingmain
 from rich.console import Console
 from rich.table import Table
@@ -299,7 +302,7 @@ def main():
 		sys.exit(0)
 	
 	while True:
-		action = Prompt.ask("[magenta]Cosa vuoi fare[/magenta] ((r)egistrare un nuovo utente, (s)carica qualcosa dalle tue librerie, scarica da un servizio (o)neshot, effettua il (l)ogout, organizza i (t)okens, (v)edi tutti i tuoi libri, (e)sci, passa all'(ing)lese)", default="d")
+		action = Prompt.ask("[magenta]Cosa vuoi fare[/magenta] ((r)egistrare un nuovo utente, (s)carica qualcosa dalle tue librerie, scarica da un servizio (o)neshot, effettua il (l)ogout, organizza i (t)okens, (v)edi tutti i tuoi libri, (e)sci, seleziona una (li)ngua", default="d")
 		match action:
 			case "v":
 				books()
@@ -309,9 +312,10 @@ def main():
 				downloadbook()
 			case "o":
 				downloadoneshot()
-			case "ing":
-				console.print("[b]Passo all'inglese...[/b]")
-				ingmain.main()
+			case "li":
+				console.print("[b]Apro il selettore di lingue...[/b]")
+				time.sleep(1)
+				lase.main()
 				sys.exit(0)
 			case "l":
 				logout()

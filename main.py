@@ -4,6 +4,7 @@ import sys
 import os
 import shutil
 import subprocess
+import time
 import requests
 import itamain
 import ingmain
@@ -22,6 +23,8 @@ def center(var, space=None):
 	return '\n'.join(' ' * int(space or (os.get_terminal_size().columns - len(var.splitlines()[len(var.splitlines()) // 2])) / 2) + line for line in var.splitlines())
 
 def main():
+	console.clear()
+	
 	if not (sys.version_info.major >= 3 and sys.version_info.minor >= 10):
 		console.print("Python version 3.10 or greater is required!", style="bold red")
 		sys.exit(1)
@@ -31,9 +34,13 @@ def main():
 		action = Prompt.ask("Select a language: (ita)lian or (eng)lish", default="eng")
 		match action:
 			case "eng":
+				console.print('About to switch to English...')
+				time.sleep(1)
 				ingmain.main()
 				sys.exit(0)
 			case "ita":
+				console.print('About to switch to Italian...')
+				time.sleep(1)
 				itamain.main()
 				sys.exit(0)
 
