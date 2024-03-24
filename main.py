@@ -1,21 +1,10 @@
-import utils
-import version
 import sys
 import os
-import shutil
-import subprocess
 import time
-import requests
 import itamain
 import ingmain
-import re
 from rich.console import Console
-from rich.table import Table
-from rich.rule import Rule
 from rich.prompt import Prompt
-from rich.prompt import Confirm
-from rich.progress import Progress
-import config
 
 console = Console()
 
