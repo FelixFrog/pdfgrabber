@@ -24,7 +24,7 @@ def center(var, space=None):
 
 def main():
 	console.clear()
-	
+
 	if not (sys.version_info.major >= 3 and sys.version_info.minor >= 10):
 		console.print("Python version 3.10 or greater is required!", style="bold red")
 		sys.exit(1)
@@ -34,18 +34,18 @@ def main():
 		action = Prompt.ask("Select a language: (ita)lian or (eng)lish", default="eng")
 		match action:
 			case "eng":
-				console.print('About to switch to English...')
+				console.print("Let's go English!")
 				time.sleep(1)
 				ingmain.main()
 				sys.exit(0)
 			case "ita":
-				console.print('About to switch to Italian...')
+				console.print("Jamm' ja! Vai italiano!")
 				time.sleep(1)
 				itamain.main()
 				sys.exit(0)
 
 			case _:
-				console.print('No "' + action + '" language!', style="bold red")
+				console.print('No "' + action + '" language! If you can make it, it would be much appreciated... ', style="bold red")
 
 
 if __name__ == '__main__':
