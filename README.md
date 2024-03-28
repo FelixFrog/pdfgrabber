@@ -64,7 +64,7 @@ Apps that I am aware of but I can't work with beacuse I don't have books:
 
 # Services that were once supported but now aren't
 ## Zanichelli services
-An [unformal takedown notice from Zanichelli](https://github.com/FelixFrog/pdfgrabber/issues/75) was issued.
+A (very) informal [takedown notice from Zanichelli](https://github.com/FelixFrog/pdfgrabber/issues/75) was issued.
 ## Scuolabook
 Scuolabook has shutdown on 01/01/2024
 
