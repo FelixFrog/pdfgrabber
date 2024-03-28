@@ -15,7 +15,7 @@ usertable = db.table("users")
 tokentable = db.table("tokens")
 booktable = db.table("books")
 
-services = {"bsm": "bSmart", "ees": "easyeschool", "hbs": "Mondadori HUB Scuola", "mcm": "MEE2", "myl": "MyLim", "prs": "Pearson Reader+ / Pearson+", "sbk": "Scuolabook", "znc": "Zanichelli Booktab / Kitaboo", "dbk": "Laterza diBooK", "olb": "Oxford Learner’s Bookshelf", "rfl": "Raffaello Player", "cmb": "Cambridge GO", "blk": "Blinklearning", "hoe": "HoepliAcademy+", "pmb": "Palumbo Editore - Saggi Digitali", "cng": "Cengage Read", "orc": "Oxford Reading Club"}
+services = {"bsm": "bSmart", "ees": "easyeschool", "hbs": "Mondadori HUB Scuola", "mcm": "MEE2", "myl": "MyLim", "prs": "Pearson Reader+ / Pearson+", "dbk": "Laterza diBooK", "olb": "Oxford Learner’s Bookshelf", "rfl": "Raffaello Player", "cmb": "Cambridge GO", "blk": "Blinklearning", "hoe": "HoepliAcademy+", "pmb": "Palumbo Editore - Saggi Digitali", "cng": "Cengage Read", "orc": "Oxford Reading Club"}
 nologin = ["pmb"]
 oneshots = {"gnt": "mydBook Giunti TVP", "apb": "AppBook"}
 
