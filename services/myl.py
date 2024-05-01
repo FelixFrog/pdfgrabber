@@ -34,7 +34,7 @@ def cover(token, bookid, data):
 
 def getoutlines(item, notnumbered, level):
 	subtoc = []
-	subtoc.append([level, item["titolo"], item["pagina"] + notnumbered])
+	subtoc.append([level, item["titolo"], max(item["pagina"] + notnumbered, 0)])
 	for i in item["children"]:
 		subtoc.extend(getoutlines(i, notnumbered, level + 1))
 	return subtoc

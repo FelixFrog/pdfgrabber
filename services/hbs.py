@@ -7,6 +7,7 @@ import zipfile
 import tempfile
 import sqlite3
 import json
+from pathlib import Path
 
 service = "hbs"
 
@@ -74,10 +75,15 @@ def library(token):
 def downloadbook(token, bookid, data, progress):
 	progress(0, "Getting book info")
 	bookinfozip = downloadzip(token, bookid, progress, 5, 0)
-	with tempfile.NamedTemporaryFile() as tf:
-		tf.write(bookinfozip.read("publication/publication.db"))
-		cur = sqlite3.connect(tf.name).cursor()
-		bookinfo = json.loads(cur.execute("SELECT offline_value FROM 'offline_tbl' WHERE offline_path = 'meyoung/publication/" + bookid + "';").fetchone()[0])
+	with tempfile.TemporaryDirectory(prefix="hbs.", ignore_cleanup_errors=True) as tmpdirfull:
+		tmpdir = Path(tmpdirfull)
+		dbpath = tmpdir / "publication.db"
+		dbfile = open(dbpath, "wb")
+		dbfile.write(bookinfozip.read("publication/publication.db"))
+		dbfile.close()
+		cur = sqlite3.connect(dbpath).cursor()
+		t = cur.execute("SELECT offline_value FROM 'offline_tbl' WHERE offline_path = 'meyoung/publication/" + bookid + "';").fetchone()
+		bookinfo = json.loads(t[0])
 
 	pdf = fitz.Document()
 	toc = []
