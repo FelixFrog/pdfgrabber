@@ -81,14 +81,23 @@ def downloadbook(token, bookid, data, progress):
 		dbfile = open(dbpath, "wb")
 		dbfile.write(bookinfozip.read("publication/publication.db"))
 		dbfile.close()
+		basepath = "me" + data["platform"]
 		cur = sqlite3.connect(dbpath).cursor()
-		t = cur.execute("SELECT offline_value FROM 'offline_tbl' WHERE offline_path = 'meyoung/publication/" + bookid + "';").fetchone()
+		t = cur.execute(f"SELECT offline_value FROM 'offline_tbl' WHERE offline_path = '{basepath}/publication/" + bookid + "';").fetchone()
 		bookinfo = json.loads(t[0])
 
 	pdf = fitz.Document()
 	toc = []
 
-	pagecount = 1
+	def parsechapter(chapterzip, chapterobj, level):
+		toc.append([level, chapterobj["title"], len(pdf) + 1])
+		for j in chapterobj["children"]:
+			if isinstance(j, int):
+				if j in bookinfo["pagesId"]:
+					pdf.insert_pdf(extractpage(chapterzip, chapterobj["chapterId"], j))
+			else:
+				parsechapter(chapterzip, j, level + 1)
+
 	chapters = bookinfo["indexContents"]["chapters"]
 	chapterwidth = (98 - 5) / len(chapters)
 
@@ -96,21 +105,8 @@ def downloadbook(token, bookid, data, progress):
 		chapterstart = 5 + (i * chapterwidth)
 		progress(chapterstart, f"Downloading unit {i + 1}/{len(chapters)}")
 		chapterzip = downloadzip(token, bookid, progress, chapterwidth, chapterstart, str(chapter["chapterId"]))
-		toc.append([1, chapter["title"], pagecount])
-		for j in chapter["children"]:
-			if isinstance(j, int):
-				if j in bookinfo["pagesId"]:
-					pagepdf = extractpage(chapterzip, chapter["chapterId"], j)
-					pdf.insert_pdf(pagepdf)
-					pagecount += 1
-			else:
-				if len(chapter["children"]) > 1:
-					toc.append([2, j["title"], pagecount])
-				for k in j["children"]:
-					if k in bookinfo["pagesId"]:
-						pagepdf = extractpage(chapterzip, chapter["chapterId"], k)
-						pdf.insert_pdf(pagepdf)
-						pagecount += 1
+
+		parsechapter(chapterzip, chapter, 1)
 
 	progress(98, "Applying toc/labels")
 	if config.getboolean(service, "PageLabels", fallback=False):
