@@ -1,11 +1,11 @@
 import requests
 from Crypto.Cipher import DES3
 from Crypto.Util.Padding import unpad
-from io import BytesIO
 from zipfile import ZipFile
 import json
 from base64 import b64decode, b64encode
 import fitz
+import tempfile
 
 service = "mcm"
 
@@ -29,18 +29,14 @@ def getbookzips(token, bookid, baseurl):
 	r = requests.get(baseurl + "/LMS/downloaderPlus.php", params={"IDSESSIONDIRECT": token, "op": "getdiff", "last_update": 0, "elemid": bookid, "elem": "course", "synchromode": 2, "device": "androidapp"})
 	return r.json()
 
-def downloadzip(url, progress=False, total=0, done=0):
+def downloadzip(url, tmpfile, progress=False, total=0, done=0):
 	showprogress = bool(progress)
 	r = requests.get(url, stream=showprogress)
-	if showprogress:
-		length = int(r.headers.get("content-length", 1))
-		file = b""
-		for data in r.iter_content(chunk_size=102400):
-			file += data
-			progress(round(done + len(file) / length * total))
-		return file
-	else:
-		return r.content
+	length = int(r.headers.get("content-length", 1))
+	for data in r.iter_content(chunk_size=102400):
+		tmpfile.write(data)
+		if showprogress:
+			progress(round(done + tmpfile.tell() / length * total))
 
 def getresource(path, baseurl):
 	r = requests.get(baseurl + path)
@@ -72,10 +68,16 @@ def login(username, password, baseurl=macmillan_baseurl):
 		return logindata["userToken"]
 
 def identifyuserzip(token, baseres, baseurl):
-	url = next(i["url"] for i in baseres["zips"] if "tmp" in i["url"])
-	userzip = ZipFile(BytesIO(downloadzip(url)))
-
-	return userzip
+	urls = [i["url"] for i in baseres["zips"] if "tmp" in i["url"]]
+	tf = tempfile.TemporaryFile()
+	for url in urls:
+		userzip = downloadzip(url, tf)
+		userzip = ZipFile(tf)
+		if "coursePlayer/" in userzip.namelist():
+			return userzip
+		else:
+			tf.close()
+			tf = tempfile.TemporaryFile()
 
 def library(token, baseurl=macmillan_baseurl):
 	baseres = getbaseres(token, baseurl)
@@ -105,11 +107,13 @@ def downloadbook(token, bookid, data, progress, baseurl=macmillan_baseurl):
 	for i, file in enumerate(todownload):
 		zipstart = 5 + i * width
 		progress(zipstart, f"Downloading zip {i + 1}/{len(todownload)}")
-		czip = ZipFile(BytesIO(downloadzip(file["url"], progress, width, zipstart)))
-		if file["key"]:
-			for i in czip.namelist():
-				if not i.endswith("/"):
-					files[i.rpartition("/")[2]] = decryptfile(czip.read(i), file["key"])
+		with tempfile.TemporaryFile() as tf:
+			downloadzip(file["url"], tf, progress, width, zipstart)
+			czip = ZipFile(tf)
+			if file["key"]:
+				for i in czip.namelist():
+					if not i.endswith("/"):
+						files[i.rpartition("/")[2]] = decryptfile(czip.read(i), file["key"])
 
 	pdf = fitz.Document()
 	toc = []
