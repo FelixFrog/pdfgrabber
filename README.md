@@ -25,6 +25,7 @@ Please contact me on "Issues" if you want to issue a takedown notice.
 | Palumbo Editore - Saggi Digitali | yes | yes | average/big | no | no | no | yes | no | no | |
 | Cengage Read | yes | yes | enormous (500+ mb) | no | yes | ? | yes | yes | yes | |
 | Oxford Reading Club | yes | yes/(depends on vendor) | big | 2 | no | ? | yes | no | no | |
+| Sanoma My Place | yes | yes | (unimplemented)/excellent | no | yes | very quickly | yes | (yes, not implemented) | no | |
 
 Apps that I am aware of but I can't work with beacuse I don't have books:
  - ~~Appbook (might be a shitty html webview)~~
@@ -36,7 +37,7 @@ Apps that I am aware of but I can't work with beacuse I don't have books:
 ## TODO
  - Make a CLI interface with argparser
  - Token versioning
- - pdfgrabber versining
+ - pdfgrabber versioning
  - Add anonymous user
  - ~~Add ability to pass options to scripts~~
  - Add "perfect" token checks
