@@ -187,7 +187,8 @@ def downloadhtml5(token, data, progress):
 		for i in p["content"]:
 			if i["modelName"] == "page" and i["isPage"] == "true" and (i["display"] == "true" or configfile.getboolean(service, "AddHiddenPages", fallback=True)):
 				pages.append(i)
-				if i["title"] != i["logicalPageNumber"]:
+				#if i["title"] != i["logicalPageNumber"]:
+				if "title" in i:
 					toc.append([level, i["title"], s])
 				s += 1
 			elif "content" in i: # or i["modelName"] == "section-chapter"
@@ -208,35 +209,47 @@ def downloadhtml5(token, data, progress):
 		del(bookzip)
 
 		structure = json.load(open(tmpdir / "structure.json", "r"))
+		pagesizemap = {}
+		istocdirty = False
 		with sync_playwright() as p:
 			browser = p.chromium.launch()
 			bpage = browser.new_page()
 			totpages, toc, totnum = linearize(structure["book"], 1, 1)
-			for page in totpages:
+			for i, page in enumerate(totpages):
 				pagefile = tmpdir / page["localPath"]
 				if not pagefile.exists():
 					print("Page file doens't exist, skipping...")
 					continue
 
-				if page["title"]:
-					labels.append(page["logicalPageNumber"])
+				if page.get("logicalPageNumber"):
+					labels.append(page["title"])
 				else:
 					labels.append(str(len(pdf) + 1))
 
-				progress(48 + ((len(pdf) / totnum) * 50), f"Rendering page {len(pdf)}/{totnum}")
+				pagesizemap[(i + 1)] = (len(pdf) + 1)
+
+				progress(48 + (((i + 1) / totnum) * 50), f"Rendering page {(i + 1)}/{totnum}")
 				bpage.goto(pagefile.as_uri())
 				if configfile.getboolean(service, "SelectableTextHack", fallback=True):
 					bpage.locator(".textLayer > span").evaluate_all("elements => elements.forEach((i) => i.style.color = '#00000001');")
-				width, height = str(float(page["width"])) + "px", str(float(page["height"])) + "px"
-				pdfpagebytes = bpage.pdf(print_background=True, width=width, height=height, page_ranges="1")
+				if page.get("width") and page.get("height"):
+					width, height = str(float(page["width"])) + "px", str(float(page["height"])) + "px"
+					pdfpagebytes = bpage.pdf(print_background=True, width=width, height=height, page_ranges="1")
+				else:
+					istocdirty = True
+					pdfpagebytes = bpage.pdf(print_background=True, format="A4")
 				pagepdf = fitz.Document(stream=pdfpagebytes, filetype="pdf")
 				pdf.insert_pdf(pagepdf)
 
 			browser.close()
 
+		if istocdirty:
+			for i in toc:
+				i[2] = pagesizemap[i[2]]
+
 	progress(98, "Applying toc/labels")
 	pdf.set_page_labels(lib.generatelabelsrule(labels))
-	pdf.set_toc(toc)
+	pdf.set_toc(lib.cleantoc(toc))
 	return pdf
 
 def downloadbook(token, bookid, data, progress):

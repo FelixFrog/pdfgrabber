@@ -105,3 +105,12 @@ def destroyalphabetical_fake(s):
 		n += int(26 ** i * (ord(l) - 96))
 
 	return n - 1
+
+def cleantoc(toc):
+	newtoc = [toc[0]]
+	for i in range(1, len(toc)):
+		if toc[i - 1][0] == (toc[i][0] - 1) and toc[i - 1][1] == toc[i][1] and toc[i - 1][2] == toc[i][2]:
+			continue
+		else:
+			newtoc.append(toc[i])
+	return newtoc
