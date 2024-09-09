@@ -208,8 +208,9 @@ def downloadhtml5(token, data, progress):
 		bookzip.extractall(path=tmpdir)
 		del(bookzip)
 
-		structure = json.load(open(tmpdir / "structure.json", "r"))
+		structure = json.load(open(tmpdir / "structure.json", "r", encoding="utf-8"))
 		pagesizemap = {}
+		papersize = configfile.get(service, "PaperSizeLiquidBooks", fallback="A4")
 		istocdirty = False
 		with sync_playwright() as p:
 			browser = p.chromium.launch()
@@ -237,7 +238,7 @@ def downloadhtml5(token, data, progress):
 					pdfpagebytes = bpage.pdf(print_background=True, width=width, height=height, page_ranges="1")
 				else:
 					istocdirty = True
-					pdfpagebytes = bpage.pdf(print_background=True, format="A4")
+					pdfpagebytes = bpage.pdf(print_background=True, format=papersize)
 				pagepdf = fitz.Document(stream=pdfpagebytes, filetype="pdf")
 				pdf.insert_pdf(pagepdf)
 
