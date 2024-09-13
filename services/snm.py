@@ -92,6 +92,8 @@ def parsestructure(mobj):
 		if i["id"] not in children:
 			children[i["id"]] = []
 		if p := i.get("parent_unit"):
+			if p not in children:
+				children[p] = []
 			children[p].append(i["id"])
 		else:
 			first.append(i["id"])
@@ -122,7 +124,7 @@ def parsestructure(mobj):
 
 	first = [i for i in first if children[i]]
 	generatetoc(first, 1)
-	
+
 	return toc, labels
 
 def checkrequest(res):
@@ -176,7 +178,7 @@ def downloadbook(token, bookid, data, progress):
 
 		progress(3, "Downloading zip")
 		downloadzip(url, open(zippath, "wb"), progress, 40, 3)
-		
+
 		progress(45, "Extracting zip")
 		bookzip = ZipFile(zippath, "r")
 		bookzip.extractall(path=tmpdir)
@@ -185,7 +187,7 @@ def downloadbook(token, bookid, data, progress):
 
 		urlmatch = re.search(r"https:\\\/\\\/npmitaly-pro-gpd-files\.santillana\.es\\\/editorLM50\\\/([0-9]{6,8})\\\/pdf\\\/(.+?)\.pdf", master.read())
 		master.seek(0)
-		
+
 		mobj = json.load(master)
 		toc, labels = parsestructure(mobj)
 
