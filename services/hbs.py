@@ -34,7 +34,12 @@ def downloadzip(token, bookid, progress, total, done, chapterid="publication"):
 	for data in r.iter_content(chunk_size=102400):
 		file += data
 		progress(round(done + len(file) / length * total))
-	return zipfile.ZipFile(BytesIO(file), "r")
+	try:
+		res = zipfile.ZipFile(BytesIO(file), "r")
+	except zipfile.BadZipFile as e:
+		print(f"Error downloading {chapterid}: {file.decode(errors='ignore')}")
+		res = None
+	return res
 
 def cover(token, bookid, data):
 	r = requests.get(data["cover"], params={"tokenId": token}, headers={"Token-Session": token}, auth=("testusername", "testpassword"))
@@ -104,9 +109,10 @@ def downloadbook(token, bookid, data, progress):
 	for i, chapter in enumerate(chapters):
 		chapterstart = 5 + (i * chapterwidth)
 		progress(chapterstart, f"Downloading unit {i + 1}/{len(chapters)}")
-		chapterzip = downloadzip(token, bookid, progress, chapterwidth, chapterstart, str(chapter["chapterId"]))
-
-		parsechapter(chapterzip, chapter, 1)
+		if isinstance(chapter, dict) and chapter.get("chapterId"):
+			chapterzip = downloadzip(token, bookid, progress, chapterwidth, chapterstart, str(chapter["chapterId"]))
+			if chapterzip:
+				parsechapter(chapterzip, chapter, 1)
 
 	progress(98, "Applying toc/labels")
 	if config.getboolean(service, "PageLabels", fallback=False):
