@@ -1,4 +1,5 @@
 import re
+import unicodedata
 
 roman = [(1000, "M"), (900, "CM"), (500, "D"), (400, "CD"), (100, "C"), (90, "XC"), (50, "L"), (40, "XL"), (10, "X"), (9, "IX"), (5, "V"), (4, "IV"), (1, "I")]
 
@@ -114,3 +115,8 @@ def cleantoc(toc):
 		else:
 			newtoc.append(toc[i])
 	return newtoc
+
+def sanitizetitle(title):
+	value = unicodedata.normalize('NFKD', title).encode('ascii', 'ignore').decode('ascii')
+	value = re.sub(r'[^\w\s-]', '', value.lower())
+	return re.sub(r'[-\s]+', '-', value).strip('-_')

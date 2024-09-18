@@ -5,6 +5,7 @@ from hashlib import sha256
 from pathlib import Path
 import os
 import config
+import lib
 
 os.chdir(Path(__file__).parent)
 
@@ -34,11 +35,21 @@ def login(servicename, username, password):
 def checkpath(path):
 	os.makedirs(path.parent, exist_ok=True)
 
+def getfilename(values, servicename):
+	formatstr = config.get(servicename, "FilenameFormat", fallback="{bookid}-{title}")
+	values['title'] = lib.sanitizetitle(values['title'])
+	try:
+		res = formatstr.format(**values) + ".pdf"
+	except KeyError as e:
+		res = f"{values['bookid']}-{values['title']}.pdf"
+	return res
+
 def downloadbook(servicename, token, bookid, data, progress):
 	service = getservice(servicename)
-	pdfpath = Path("files") / servicename / (f"{bookid}.pdf")
+	filename = getfilename(data | {'bookid': bookid}, servicename)
+	pdfpath = Path("files") / servicename / filename
 	checkpath(pdfpath)
-	
+
 	pdf = service.downloadbook(token, bookid, data, progress)
 	pdfnow = fitz.get_pdf_now()
 
@@ -63,7 +74,8 @@ def downloadoneshot(servicename, url, progress):
 		print("Invalid link!")
 		exit()
 	pdf, bookid, title = result
-	pdfpath = Path("files") / servicename / (f"{bookid}.pdf")
+	filename = getfilename({'bookid': bookid, 'title': title}, servicename)
+	pdfpath = Path("files") / servicename / filename
 	checkpath(pdfpath)
 
 	pdfnow = fitz.get_pdf_now()

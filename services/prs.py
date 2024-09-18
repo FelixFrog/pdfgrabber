@@ -239,7 +239,7 @@ def library(token):
 		books[str(i["book_id"])] = {"title": i["book_title"], "cover": i["cover_image_url"], "isbn": i["isbn"], "type": i["product_model"], "prodid": i["product_id"], "author": i["author"], "entitlementsource": i["entitlement_source"], "pwd": i.get("encrypted_password"), "url": i.get("downloadUrl")}
 		if configfile.getboolean(service, "ShowFormat", fallback=False):
 			books[str(i["book_id"])]["title"] = i["product_model"] + " - " + i["book_title"]
-	
+
 	return books
 
 def downloadetextliquid(token, bookid, data, progress):
@@ -355,7 +355,7 @@ def downloadetextpdf(token, bookid, data, progress):
 
 	progress(93, "Opening pdf")
 	pdf = fitz.Document(stream=decryptedbook, filetype="pdf")
-	
+
 	progress(95, "Fetching toc")
 	tocobj = getbooktoc(token, data["prodid"])
 	toc = []
@@ -367,7 +367,7 @@ def downloadetextpdf(token, bookid, data, progress):
 				toc.extend(getoutlines(i, labels, 1))
 		progress(98, "Applying toc")
 		pdf.set_toc(toc)
-	
+
 	return pdf
 
 def downloadrpluspdf(url, password, progress):
@@ -406,14 +406,14 @@ def downloadrplusepub(url, password, progress):
 
 		progress(2, "Downloading zip")
 		downloadfile_ondisk(url, progress, 20, 2, open(tmpdir / "base.zip", "wb"))
-		
+
 		progress(24, "Extracting zip")
 		bookzip = ZipFile(tmpdir / "base.zip", "r")
 		epubpath = next(i for i in bookzip.namelist() if i.endswith(".epub"))
-		
+
 		bookzip.extract(epubpath, tmpdir, pwd=finalpassword)
 		#(tmpdir / "base.zip").unlink(missing_ok=True)
-		
+
 		epubzip = ZipFile(tmpdir / epubpath, "r")
 
 		progress(31, "Extracting epub")
@@ -429,7 +429,7 @@ def downloadrplusepub(url, password, progress):
 		spine = contents.find("{*}spine")
 		pages = [(contentspath.parent / files[i.get("idref")]["href"]).resolve() for i in spine.findall("{*}itemref")]
 		navpath = contentspath.parent / next(i["href"] for i in files.values() if i.get("properties") == "nav")
-		
+
 		tocfile = et.parse(open(navpath, "r", encoding="utf-8-sig")).getroot()
 
 		tocitem = next(i for i in tocfile.find("{*}body").findall("{*}nav") if i.get("{http://www.idpf.org/2007/ops}type") == "toc")
