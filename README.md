@@ -38,8 +38,6 @@ Apps that I am aware of but I can't work with beacuse I don't have books:
  - Make a CLI interface with argparser
  - Token versioning
  - pdfgrabber versioning
- - Add anonymous user
- - ~~Add ability to pass options to scripts~~
  - Add "perfect" token checks
  - General code quality improvement (better management of exceptions)
  - Make toc and labels generation raise non-critical warnings
@@ -54,14 +52,13 @@ Apps that I am aware of but I can't work with beacuse I don't have books:
 3. open your local clone of pdfgrabber
 4. open the terminal in that directory and run:
     1) `pip install -r requirements.txt` (takes care of installing every needed libraries)
-    2) run the script
-        - `python3 main.py` (linux and macos) 
+    2) `playwright install chromium` (installs the browser needed for html rendering)
+    3) run the script
+        - `python3 main.py` (linux and macos)
         - `py main.py` (windows)
 5. once inside the pdfgrabber CLI:
-    - press `r`: register a new account
-    - choose what to do (it's listed):
-       - to download a book: press `d` and follow the instructions.
-       - the output file will be `files/<service>/<book name>.pdf`
+    - to download a book: press `d` and follow the instructions.
+    - the output file will be `files/<service>/<book name>.pdf`
 
 # Services that were once supported but now aren't
 ## Zanichelli services
@@ -71,12 +68,10 @@ Scuolabook has shutdown on 01/01/2024
 
 # Support
 For personalized support, contact me on [telegram](https://t.me/fflxx).
-We also accept donations, so we can keep this project up! 
+We also accept donations, so we can keep this project up!
 
 [![liberapay](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/flx/donate)
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Z8Z4PCZUI)
 
 Also [Satispay](https://www.satispay.com/app/match/link/user/S6Y-CON--A7BC8CDF-2EF5-40B7-884C-FDAB482CA8ED)
-
-
