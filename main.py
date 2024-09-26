@@ -30,18 +30,26 @@ def center(var, space=None):
 def login():
 	global userid
 	username, password = "", ""
-	first = True
-	checkpassword = config.getboolean("pdfgrabber", "AskPassword", fallback=False)
-	while not (userid := utils.new_login(username, password, checkpassword)):
-		if not first:
-			console.print("Invalid login!", style="red")
-		first = False
-		if checkpassword:
-			username = Prompt.ask("[b]pdfgrabber[/b] username")
-			password = Prompt.ask("[b]pdfgrabber[/b] password", password=True)
-		else:
-			username = Prompt.ask("[b]pdfgrabber[/b] username", choices=utils.getusers())
-	console.print("Logged in!", style="green")
+	users = utils.getusers()
+	if len(users) == 0:
+		userid = utils.register("default", "pdfgrabber")
+		username = "default"
+	elif len(users) == 1 and config.getboolean("pdfgrabber", "DefaultUser", fallback=True):
+		userid = utils.new_login("default", "pdfgrabber", False)
+		username = "default"
+	else:
+		first = True
+		checkpassword = config.getboolean("pdfgrabber", "AskPassword", fallback=False)
+		while not (userid := utils.new_login(username, password, checkpassword)):
+			if not first:
+				console.print("Invalid login!", style="red")
+				first = False
+			if checkpassword:
+				username = Prompt.ask("[b]pdfgrabber[/b] profile name")
+				password = Prompt.ask("[b]pdfgrabber[/b] profile password", password=True)
+			else:
+				username = Prompt.ask("Choose a [b]pdfgrabber[/b] profile to save credentials to", choices=users)
+	console.print(f"Profile [b]{username}[/b] chosen!", style="green")
 
 def selectservice(services):
 	table = Table(title="Available services")
@@ -80,7 +88,7 @@ def downloadbook():
 	service = selectservice(utils.services)
 	token = utils.gettoken(userid, service)
 	servicename = utils.services[service]
-	
+
 	if token:
 		with console.status("[bold green]Checking token...") as status:
 			check = utils.checktoken(service, token)
@@ -139,7 +147,7 @@ def downloadbook():
 	console.print(table)
 
 	choices = Prompt.ask("Select a book or a comma-separated list of books").split(",")
-	
+
 	def checknumber(n):
 		if n.isdigit():
 			return int(n) < len(id2bookid) and int(n) >= 0
@@ -206,19 +214,19 @@ def downloadoneshot():
 	console.print(f"[bold green]Done![/bold green] Your book is in {pdfpath}")
 
 def register():
-	username = Prompt.ask("Username")
-	password = Prompt.ask("Password", password=True)
+	username = Prompt.ask("[b]pdfgrabber[/b] profile name")
+	password = Prompt.ask("[b]pdfgrabber[/b] profile password", password=True)
 	repeatpassword = Prompt.ask("Retype password", password=True)
 	if (password != repeatpassword):
 		console.print("Passwords do not match!", style="bold red")
 		exit()
 	utils.register(username, password)
-	console.print(f"Signed up {username}, now you can download books!", style="bold green")
+	console.print(f"Created profile {username}, now you can save credentials to it!", style="bold green")
 
 def logout():
 	global userid
 	userid = False
-	console.print("Logged out!", style="bold magenta")
+	console.print("De-selected the current profile!", style="bold magenta")
 
 def books():
 	available = utils.listbooks()
@@ -243,9 +251,9 @@ def main():
 		console.print(Rule("version 1.0"))
 	else:
 		console.print(Rule("pdfgrabber version 1.0"))
-	
+
 	while True:
-		action = Prompt.ask("[magenta]What do you want to do?[/magenta] ((r)egister new user, (d)ownload from your libraries, download from a (o)ne-shot link, (l)ogout, manage (t)okens, (v)iew all books, (q)uit)", choices=["r", "d", "o", "l", "t", "v", "q"], default="d")
+		action = Prompt.ask("[magenta]What do you want to do?[/magenta] ((r)egister new profile, (d)ownload from your libraries, download from a (o)ne-shot link, (c)hange profile, manage (t)okens, (v)iew all books, (q)uit)", choices=["r", "d", "o", "c", "t", "v", "q"], default="d")
 		match action:
 			case "r":
 				register()
@@ -253,8 +261,9 @@ def main():
 				downloadbook()
 			case "o":
 				downloadoneshot()
-			case "l":
+			case "c":
 				logout()
+				login()
 			case "t":
 				managetokens()
 			case "v":
