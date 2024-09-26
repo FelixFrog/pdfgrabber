@@ -29,13 +29,15 @@ def center(var, space=None):
 
 def login():
 	global userid
+	username, password = "", ""
 	users = utils.getusers()
 	if len(users) == 0:
 		userid = utils.register("default", "pdfgrabber")
+		username = "default"
 	elif len(users) == 1 and config.getboolean("pdfgrabber", "DefaultUser", fallback=True):
 		userid = utils.new_login("default", "pdfgrabber", False)
+		username = "default"
 	else:
-		username, password = "", ""
 		first = True
 		checkpassword = config.getboolean("pdfgrabber", "AskPassword", fallback=False)
 		while not (userid := utils.new_login(username, password, checkpassword)):
@@ -47,7 +49,7 @@ def login():
 				password = Prompt.ask("[b]pdfgrabber[/b] profile password", password=True)
 			else:
 				username = Prompt.ask("Choose a [b]pdfgrabber[/b] profile to save credentials to", choices=users)
-	console.print(f"Profile [b]{userid}[/b]chosen!", style="green")
+	console.print(f"Profile [b]{username}[/b] chosen!", style="green")
 
 def selectservice(services):
 	table = Table(title="Available services")
