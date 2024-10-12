@@ -4,5 +4,5 @@ requests
 pycryptodome
 u-msgpack-python
 tinydb
-playwright --no-binary=playwright
+playwright
 lxml
