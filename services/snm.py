@@ -198,9 +198,22 @@ def downloadbook(token, bookid, data, progress):
 			downloadzip(finalurl, pdfbytes, progress, 45, 47)
 			pdf = fitz.Document(stream=pdfbytes, filetype="pdf")
 		else:
-			print("Error: can't find the source pdf of the book, resorting to manual rendering")
-			print("Manual rendering not implemented yet, contact the developer!")
-			exit()
+			sizes = json.loads(decrypt(open(tmpdir / 'pages' / 'sizes.data', 'r').read()))
+			with sync_playwright() as p:
+				browser = p.chromium.launch()
+				bpage = browser.new_page()
+				progsize = (98 - 55) / len(sizes)
+				for i, size in enumerate(sizes):
+					progress(55 + progsize * i, f'Rendering page {i + 1}/{len(sizes)}')
+					pagefile = tmpdir / 'pages' / (str(i + 1) + '.data')
+					pagedata = decrypt(open(pagefile, 'rb').read()).replace('#PATH#', '')
+					open(pagefile.with_suffix('.html'), 'w').write(pagedata)
+					bpage.goto(pagefile.with_suffix('.html').as_uri())
+					bpage.locator('body').evaluate("element => element.style.margin = '0';")
+					pdfpagebytes = bpage.pdf(print_background=True, width=str(sizes[i][0]) + 'px', height=str(sizes[i][1]) + 'px', page_ranges="1", margin={'top': '0px', 'right': '0px', 'bottom': '0px', 'left': '0px'})
+					pagepdf = fitz.Document(stream=pdfpagebytes, filetype="pdf")
+					pdf.insert_pdf(pagepdf)
+				browser.close()
 
 	progress(98, "Applying toc/labels")
 	if not pdf.get_toc() or not configfile.getboolean(service, "PreferOriginalToc", fallback=False):
