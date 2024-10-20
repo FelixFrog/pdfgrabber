@@ -46,7 +46,7 @@ def downloadbook(url, progress):
 		if not page["licenzapdf"]["preview"]:
 			continue
 		progress(i * 100/numpages, f"Downloading page {i + 1}/{numpages}")
-		pagejpg = s.get(f'https://gi.shb-cdn.com/cdn/books/{bookid}/pdf/pages/{page["id"]}').content
+		pagejpg = s.get(f'https://mydbook.giuntitvp.it/books/{bookid}/pdf/pages/{i + 1}?type=').content
 		img = fitz.open(stream=pagejpg, filetype="jpeg")
 		pdfbytes = img.convert_to_pdf()
 		pdf.insert_pdf(fitz.open(stream=pdfbytes, filetype="pdf"))
