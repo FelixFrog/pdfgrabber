@@ -432,10 +432,10 @@ def downloadrplusepub(url, password, progress):
 
 		tocfile = et.parse(open(navpath, "r", encoding="utf-8-sig")).getroot()
 
-		tocitem = next(i for i in tocfile.find("{*}body").findall("{*}nav") if i.get("{http://www.idpf.org/2007/ops}type") == "toc")
+		tocitem = next(i for i in tocfile.find("{*}body").findall(".//{*}nav") if i.get("{http://www.idpf.org/2007/ops}type") == "toc")
 		toc.extend(gentoc(tocitem.find("{*}ol"), 1, pages, navpath.parent))
 
-		pagelistitem = next(i for i in tocfile.find("{*}body").findall("{*}nav") if i.get("{http://www.idpf.org/2007/ops}type") == "page-list")
+		pagelistitem = next(i for i in tocfile.find("{*}body").findall(".//{*}nav") if i.get("{http://www.idpf.org/2007/ops}type") == "page-list")
 		labelsdict = {}
 		for i in pagelistitem.find("{*}ol").findall("{*}li"):
 			ref = i.find("{*}a")
